@@ -256,3 +256,19 @@ input, select, textarea { font-family: inherit; }
   .split-sidebar { display: none; }
   .split-content { padding: 20px; }
 }
+
+/* ── Drag and Drop / Selection ── */
+.folder-item.drag-hover {
+  background: var(--primary) !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 0 0 2px rgba(28, 63, 170, 0.2);
+}
+.folder-item.drag-hover .badge {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+.selected-row td {
+  background-color: rgba(28, 63, 170, 0.05) !important;
+}
+

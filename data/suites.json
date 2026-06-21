@@ -1,0 +1,12 @@
+[
+  {
+    "id": "suite-001",
+    "name": "Signup Flow",
+    "description": "Verifies KMS Signup pipelines and email checks"
+  },
+  {
+    "id": "suite-002",
+    "name": "Salesforce Integration",
+    "description": "End-to-end user sync tests between KMS and Salesforce"
+  }
+]

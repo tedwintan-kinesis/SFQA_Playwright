@@ -1,33 +1,80 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Modal from '../components/Modal';
 
-const DEFAULT_SUITES = [
-  { id: 'suite-001', name: 'Signup Flow', description: 'Verifies KMS Signup pipelines and email checks', testCount: 1 },
-  { id: 'suite-002', name: 'Salesforce Integration', description: 'End-to-end user sync tests between KMS and Salesforce', testCount: 0 },
-];
-
 export default function SuitesPage() {
-  const [suites, setSuites] = useState(DEFAULT_SUITES);
+  const [suites, setSuites] = useState([]);
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', description: '' });
+  const [saving, setSaving] = useState(false);
 
-  function handleCreate(e) {
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/suites').then(r => r.json()),
+      fetch('/api/tests').then(r => r.json())
+    ]).then(([suitesData, testsData]) => {
+      setSuites(suitesData || []);
+      setTests(testsData || []);
+      setLoading(false);
+    }).catch(e => {
+      console.error(e);
+      setLoading(false);
+    });
+  }, []);
+
+  async function handleCreate(e) {
     e.preventDefault();
-    const newSuite = {
-      id: `suite-${Date.now()}`,
-      name: form.name,
-      description: form.description,
-      testCount: 0,
-    };
-    setSuites(prev => [...prev, newSuite]);
-    setShowModal(false);
-    setForm({ name: '', description: '' });
+    setSaving(true);
+    try {
+      const res = await fetch('/api/suites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Failed to create folder');
+        return;
+      }
+      const newSuite = await res.json();
+      setSuites(prev => [...prev, newSuite]);
+      setShowModal(false);
+      setForm({ name: '', description: '' });
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDelete(id) {
-    if (!confirm('Delete this suite?')) return;
-    setSuites(prev => prev.filter(s => s.id !== id));
+  async function handleDelete(id) {
+    if (!confirm('Delete this suite? Test cases in this suite will be moved to "All Tests".')) return;
+    try {
+      const res = await fetch(`/api/suites?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        alert('Failed to delete suite');
+        return;
+      }
+      setSuites(prev => prev.filter(s => s.id !== id));
+      // Refresh tests
+      const testsRes = await fetch('/api/tests');
+      const testsData = await testsRes.json();
+      setTests(testsData || []);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const getTestCount = (suiteName) => {
+    return tests.filter(t => t.suite === suiteName).length;
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 15 }}>
+        Loading suites...
+      </div>
+    );
   }
 
   return (
@@ -67,20 +114,22 @@ export default function SuitesPage() {
                 </tr>
               </thead>
               <tbody>
-                {suites.map(suite => (
-                  <tr key={suite.id}>
-                    <td style={{ fontWeight: 600 }}>{suite.name}</td>
-                    <td style={{ color: 'var(--muted)', fontSize: 13 }}>{suite.description}</td>
-                    <td><span className="pill">{suite.testCount} Test{suite.testCount !== 1 ? 's' : ''}</span></td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}>View</button>
-                        <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
-                          onClick={() => handleDelete(suite.id)}>Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {suites.map(suite => {
+                  const count = getTestCount(suite.name);
+                  return (
+                    <tr key={suite.id}>
+                      <td style={{ fontWeight: 600 }}>{suite.name}</td>
+                      <td style={{ color: 'var(--muted)', fontSize: 13 }}>{suite.description || 'No description'}</td>
+                      <td><span className="pill">{count} Test{count !== 1 ? 's' : ''}</span></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
+                            onClick={() => handleDelete(suite.id)}>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -91,7 +140,9 @@ export default function SuitesPage() {
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="btn btn-primary" form="suite-form" type="submit">Create</button>
+            <button className="btn btn-primary" form="suite-form" type="submit" disabled={saving}>
+              {saving ? 'Creating...' : 'Create'}
+            </button>
           </>
         }
       >
