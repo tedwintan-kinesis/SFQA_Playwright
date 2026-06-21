@@ -5,7 +5,7 @@
     "url": "https://qa3-kms.kinesis.money/signup",
     "zephyrId": "SFT-T74",
     "suite": "Signup Flow",
-    "specFile": "tests/new-kms-signup.spec.js",
+    "specFile": "tests/Signup Flow/new-kms-signup.spec.js",
     "type": "Web (Desktop)",
     "status": "passed",
     "lastRun": "2026-06-20T15:26:42Z",

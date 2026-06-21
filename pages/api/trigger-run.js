@@ -87,12 +87,12 @@ export default async function handler(req, res) {
 
 
   send(`[SFQA] Starting local Playwright run for: ${test.name}`, 'info');
-  send(`[SFQA] Spec: ${test.specFile || 'tests/new-kms-signup.spec.js'}`, 'info');
+  send(`[SFQA] Spec: ${test.specFile || 'tests/Signup Flow/new-kms-signup.spec.js'}`, 'info');
   send(`[SFQA] Mode: headed (local browser)`, 'info');
 
   const rootDir = process.cwd();
   const playwrightCli = path.join(rootDir, 'node_modules', '@playwright', 'test', 'cli.js');
-  const specFile = test.specFile || 'tests/new-kms-signup.spec.js';
+  const specFile = test.specFile || 'tests/Signup Flow/new-kms-signup.spec.js';
 
   const child = spawn(
     process.execPath,

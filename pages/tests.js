@@ -15,7 +15,7 @@ export default function TestsPage() {
   // Test creation modal state
   const [showModal, setShowModal] = useState(false);
   const [editTest, setEditTest] = useState(null);
-  const [form, setForm] = useState({ name: '', url: '', zephyrId: '', suite: 'All Tests', specFile: 'tests/new-kms-signup.spec.js' });
+  const [form, setForm] = useState({ name: '', url: '', zephyrId: '', suite: 'All Tests', specFile: 'tests/Signup Flow/new-kms-signup.spec.js' });
   const [saving, setSaving] = useState(false);
 
   // Folder creation modal state
@@ -56,13 +56,13 @@ export default function TestsPage() {
 
   function openCreate() {
     setEditTest(null);
-    setForm({ name: '', url: '', zephyrId: '', suite: activeSuite === 'All Tests' ? 'All Tests' : activeSuite, specFile: 'tests/new-kms-signup.spec.js' });
+    setForm({ name: '', url: '', zephyrId: '', suite: activeSuite === 'All Tests' ? 'All Tests' : activeSuite, specFile: 'tests/Signup Flow/new-kms-signup.spec.js' });
     setShowModal(true);
   }
 
   function openEdit(test) {
     setEditTest(test);
-    setForm({ name: test.name, url: test.url, zephyrId: test.zephyrId || '', suite: test.suite || 'All Tests', specFile: test.specFile || 'tests/new-kms-signup.spec.js' });
+    setForm({ name: test.name, url: test.url, zephyrId: test.zephyrId || '', suite: test.suite || 'All Tests', specFile: test.specFile || 'tests/Signup Flow/new-kms-signup.spec.js' });
     setShowModal(true);
   }
 
@@ -152,7 +152,7 @@ export default function TestsPage() {
             name: existing.name,
             url: existing.url,
             zephyrId: existing.zephyrId,
-            specFile: existing.specFile || 'tests/new-kms-signup.spec.js',
+            specFile: existing.specFile || 'tests/Signup Flow/new-kms-signup.spec.js',
             suite: targetSuiteName
           }),
         });
