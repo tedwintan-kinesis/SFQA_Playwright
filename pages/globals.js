@@ -1,19 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Modal from '../components/Modal';
 
-export default function GlobalsPage({ initialVars }) {
-  const [vars, setVars] = useState(initialVars || []);
+export default function GlobalsPage() {
+  const [vars, setVars] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editVar, setEditVar] = useState(null);
   const [form, setForm] = useState({ key: '', desc: '', fallbacks: ['', '', ''] });
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
 
+  useEffect(() => {
+    fetch('/api/variables')
+      .then(res => res.json())
+      .then(data => {
+        setVars(data || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 15 }}>
+        Loading variables...
+      </div>
+    );
+  }
+
   const filtered = vars.filter(v =>
     v.key.toLowerCase().includes(search.toLowerCase()) ||
     (v.desc || '').toLowerCase().includes(search.toLowerCase())
   );
+
 
   function openCreate() {
     setEditVar(null);
@@ -202,11 +226,4 @@ export default function GlobalsPage({ initialVars }) {
   );
 }
 
-export async function getServerSideProps() {
-  const { readVariables } = require('../lib/dataStore');
-  try {
-    return { props: { initialVars: readVariables() } };
-  } catch {
-    return { props: { initialVars: [] } };
-  }
-}
+

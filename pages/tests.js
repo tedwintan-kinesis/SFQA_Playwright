@@ -1,17 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Modal from '../components/Modal';
 
 const SUITES = ['All Tests', 'Signup Flow', 'Salesforce Integration'];
 
-export default function TestsPage({ initialTests }) {
-  const [tests, setTests] = useState(initialTests || []);
+export default function TestsPage() {
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editTest, setEditTest] = useState(null);
   const [form, setForm] = useState({ name: '', url: '', zephyrId: '', suite: 'All Tests', specFile: '' });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/tests')
+      .then(res => res.json())
+      .then(data => {
+        setTests(data || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
 
   const filtered = tests
     .filter(t => filter === 'all' || t.status === filter)
@@ -69,7 +84,16 @@ export default function TestsPage({ initialTests }) {
 
   const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 15 }}>
+        Loading tests...
+      </div>
+    );
+  }
+
   return (
+
     <>
       <Head><title>Tests — Salesforce Reflect</title></Head>
 
@@ -217,12 +241,4 @@ export default function TestsPage({ initialTests }) {
   );
 }
 
-export async function getServerSideProps() {
-  const { readTests } = require('../lib/dataStore');
-  try {
-    const tests = readTests();
-    return { props: { initialTests: tests } };
-  } catch {
-    return { props: { initialTests: [] } };
-  }
-}
+

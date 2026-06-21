@@ -1,13 +1,32 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 
-export default function RunsPage({ initialTests, initialRuns }) {
-  const [tests] = useState(initialTests || []);
-  const [runs, setRuns] = useState(initialRuns || []);
-  const [selectedTestId, setSelectedTestId] = useState(initialTests?.[0]?.id || '');
+export default function RunsPage() {
+  const [tests, setTests] = useState([]);
+  const [runs, setRuns] = useState([]);
+  const [selectedTestId, setSelectedTestId] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const consoleRef = useRef(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/tests').then(res => res.json()),
+      fetch('/api/runs').then(res => res.json())
+    ]).then(([testsData, runsData]) => {
+      setTests(testsData || []);
+      setRuns(runsData || []);
+      if (testsData && testsData.length > 0) {
+        setSelectedTestId(testsData[0].id);
+      }
+      setLoading(false);
+    }).catch(err => {
+      console.error(err);
+      setLoading(false);
+    });
+  }, []);
+
 
   function scrollConsole() {
     if (consoleRef.current) consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
@@ -64,7 +83,16 @@ export default function RunsPage({ initialTests, initialRuns }) {
     ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
     : '—';
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 15 }}>
+        Loading runs...
+      </div>
+    );
+  }
+
   return (
+
     <>
       <Head><title>Runs — Salesforce Reflect</title></Head>
 
@@ -185,11 +213,4 @@ export default function RunsPage({ initialTests, initialRuns }) {
   );
 }
 
-export async function getServerSideProps() {
-  const { readTests, readRuns } = require('../lib/dataStore');
-  try {
-    return { props: { initialTests: readTests(), initialRuns: readRuns() } };
-  } catch {
-    return { props: { initialTests: [], initialRuns: [] } };
-  }
-}
+

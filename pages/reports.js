@@ -1,10 +1,36 @@
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
-export default function ReportsPage({ runs }) {
+export default function ReportsPage() {
+  const [runs, setRuns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/runs')
+      .then(res => res.json())
+      .then(data => {
+        setRuns(data || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 15 }}>
+        Loading reports...
+      </div>
+    );
+  }
+
   const total   = runs.length;
   const passed  = runs.filter(r => r.status === 'passed').length;
   const failed  = runs.filter(r => r.status === 'failed').length;
   const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
 
   const fmtDate = (iso) => iso
     ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -109,11 +135,4 @@ export default function ReportsPage({ runs }) {
   );
 }
 
-export async function getServerSideProps() {
-  const { readRuns } = require('../lib/dataStore');
-  try {
-    return { props: { runs: readRuns() } };
-  } catch {
-    return { props: { runs: [] } };
-  }
-}
+
