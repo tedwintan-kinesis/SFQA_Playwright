@@ -11,6 +11,7 @@ export default function TestsPage() {
   const [activeSuite, setActiveSuite] = useState('All Tests');
   const [selectedIds, setSelectedIds] = useState([]);
   const [dragOverFolder, setDragOverFolder] = useState(null);
+  const [draggedIds, setDraggedIds] = useState([]);
 
   // Test creation modal state
   const [showModal, setShowModal] = useState(false);
@@ -121,6 +122,7 @@ export default function TestsPage() {
     if (selectedIds.includes(id)) {
       idsToMove = selectedIds;
     }
+    setDraggedIds(idsToMove);
     e.dataTransfer.setData('text/plain', JSON.stringify(idsToMove));
     e.dataTransfer.effectAllowed = 'move';
   };
@@ -133,10 +135,19 @@ export default function TestsPage() {
     e.preventDefault();
     setDragOverFolder(null);
     try {
+      let idsToMove = [];
       const rawData = e.dataTransfer.getData('text/plain');
-      if (!rawData) return;
-      const idsToMove = JSON.parse(rawData);
-      if (!Array.isArray(idsToMove)) return;
+      if (rawData) {
+        try {
+          idsToMove = JSON.parse(rawData);
+        } catch {
+          idsToMove = draggedIds;
+        }
+      } else {
+        idsToMove = draggedIds;
+      }
+      
+      if (!Array.isArray(idsToMove) || idsToMove.length === 0) return;
 
       // Optimistically update
       setTests(prev => prev.map(t => idsToMove.includes(t.id) ? { ...t, suite: targetSuiteName } : t));
