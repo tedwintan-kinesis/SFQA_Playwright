@@ -36,6 +36,69 @@ export default async function handler(req, res) {
     }
   }
 
+  if (req.method === 'PUT') {
+    try {
+      const { id } = req.query;
+      const suites = readSuites();
+      const idx = suites.findIndex(s => s.id === id);
+      if (idx === -1) return res.status(404).json({ error: 'Suite not found' });
+
+      const oldSuite = suites[idx];
+      const name = (req.body.name || '').trim();
+      if (!name) return res.status(400).json({ error: 'Suite name is required' });
+      if (name.toLowerCase() === 'all tests') return res.status(400).json({ error: 'All Tests is reserved' });
+      if (suites.some((s, i) => i !== idx && s.name.toLowerCase() === name.toLowerCase())) {
+        return res.status(400).json({ error: 'A suite with this name already exists' });
+      }
+
+      suites[idx] = {
+        ...oldSuite,
+        name,
+        description: req.body.description || '',
+      };
+      await writeSuites(suites);
+      await commitFile(`tests/${name}/.gitkeep`, '');
+
+      const selectedTestIds = Array.isArray(req.body.testIds) ? req.body.testIds : [];
+      const tests = readTests();
+      const usedPaths = new Set(tests.map(t => t.specFile).filter(Boolean));
+      let testsChanged = false;
+
+      for (const test of tests) {
+        const shouldBeInSuite = selectedTestIds.includes(test.id);
+        const isInOldSuite = test.suite === oldSuite.name;
+        const targetSuite = shouldBeInSuite ? name : (isInOldSuite ? 'All Tests' : test.suite);
+        if (targetSuite === test.suite && !(isInOldSuite && oldSuite.name !== name)) continue;
+
+        usedPaths.delete(test.specFile);
+        const fileSlug = slugify(test.name || 'test');
+        let nextPath = targetSuite === 'All Tests'
+          ? `tests/${fileSlug}.spec.js`
+          : `tests/${targetSuite}/${fileSlug}.spec.js`;
+        let counter = 1;
+        while (usedPaths.has(nextPath)) {
+          nextPath = targetSuite === 'All Tests'
+            ? `tests/${fileSlug}-${counter}.spec.js`
+            : `tests/${targetSuite}/${fileSlug}-${counter}.spec.js`;
+          counter++;
+        }
+        usedPaths.add(nextPath);
+
+        let content = await readFileContent(test.specFile);
+        if (!content) content = generateSpecContent(test.name, test.url, test.zephyrId, test.steps);
+        await moveFile(test.specFile, nextPath, content);
+        test.suite = targetSuite;
+        test.specFile = nextPath;
+        testsChanged = true;
+      }
+
+      if (testsChanged) await writeTests(tests);
+      return res.status(200).json({ suite: suites[idx], tests });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   if (req.method === 'DELETE') {
     try {
       const { id } = req.query;

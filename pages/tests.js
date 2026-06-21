@@ -29,10 +29,33 @@ export default function TestsPage() {
   const [localSteps, setLocalSteps] = useState([]);
   const [globalVars, setGlobalVars] = useState([]);
   const [savingSteps, setSavingSteps] = useState(false);
+  const [recording, setRecording] = useState(false);
+
+  const normalizeSteps = (steps, url) => {
+    const existing = Array.isArray(steps) ? steps : [];
+    const first = existing[0] || {};
+    return [
+      {
+        ...first,
+        id: first.id || `step-${Date.now()}`,
+        action: 'Navigate',
+        selectorType: 'manual',
+        fallbacks: [],
+        value: first.value || url || ''
+      },
+      ...existing.slice(1).map((step, idx) => ({
+        ...step,
+        id: step.id || `step-${Date.now()}-${idx}`,
+        action: step.action === 'Navigate' ? 'Click' : (step.action || 'Click'),
+        selectorType: step.selectorType || 'manual',
+        fallbacks: (step.fallbacks && step.fallbacks.length > 0 ? step.fallbacks : ['', '', '']).slice(0, 3)
+      }))
+    ];
+  };
 
   useEffect(() => {
     if (selectedTestForSteps) {
-      setLocalSteps(selectedTestForSteps.steps || []);
+      setLocalSteps(normalizeSteps(selectedTestForSteps.steps, selectedTestForSteps.url));
     } else {
       setLocalSteps([]);
     }
@@ -46,11 +69,15 @@ export default function TestsPage() {
   }, []);
 
   const addStep = () => {
+    if (localSteps.length === 0) {
+      setLocalSteps(normalizeSteps([], selectedTestForSteps?.url || form.url));
+      return;
+    }
     const newStep = {
       id: `step-${Date.now()}`,
       action: 'Click',
-      selectorType: 'global',
-      variableId: globalVars[0]?.id || '',
+      selectorType: 'manual',
+      variableId: '',
       fallbacks: ['', '', ''],
       value: ''
     };
@@ -86,6 +113,7 @@ export default function TestsPage() {
   const updateStep = (idx, field, value) => {
     setLocalSteps(prev => prev.map((step, i) => {
       if (i === idx) {
+        if (i === 0 && field !== 'value') return step;
         const updated = { ...step, [field]: value };
         if (field === 'selectorType') {
           if (value === 'manual' && (!step.fallbacks || step.fallbacks.length === 0)) {
@@ -130,7 +158,7 @@ export default function TestsPage() {
     try {
       const payload = {
         ...selectedTestForSteps,
-        steps: localSteps
+        steps: normalizeSteps(localSteps, selectedTestForSteps.url)
       };
       const res = await fetch(`/api/tests/${selectedTestForSteps.id}`, {
         method: 'PUT',
@@ -150,6 +178,31 @@ export default function TestsPage() {
       alert('Error saving steps.');
     } finally {
       setSavingSteps(false);
+    }
+  };
+
+  const startRecord = async (test, throughStepIndex = null) => {
+    if (!test) return;
+    setRecording(true);
+    try {
+      const body = { testId: test.id };
+      if (Number.isInteger(throughStepIndex)) body.throughStepIndex = throughStepIndex;
+      const res = await fetch('/api/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to start recorder.');
+        return;
+      }
+      alert(data.message || 'Recorder started.');
+    } catch (err) {
+      console.error(err);
+      alert('Error starting recorder.');
+    } finally {
+      setRecording(false);
     }
   };
 
@@ -196,8 +249,12 @@ export default function TestsPage() {
     setShowModal(true);
   }
 
-  async function handleSave(e) {
-    e.preventDefault();
+  async function handleSave(e, recordAfterCreate = false) {
+    if (e) e.preventDefault();
+    if (!form.name.trim() || !form.url.trim()) {
+      alert('Test name and start URL are required.');
+      return;
+    }
     setSaving(true);
     try {
       if (editTest) {
@@ -208,19 +265,23 @@ export default function TestsPage() {
         const updated = await res.json();
         setTests(prev => prev.map(t => t.id === editTest.id ? updated : t));
       } else {
+        const initialSteps = normalizeSteps([], form.url);
         const res = await fetch('/api/tests', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify({ ...form, steps: initialSteps }),
         });
         const created = await res.json();
         setTests(prev => [...prev, created]);
+        setSelectedTestForSteps(created);
+        if (recordAfterCreate) {
+          await startRecord(created);
+        }
       }
       setShowModal(false);
     } finally {
       setSaving(false);
     }
   }
-
   async function handleDelete(id) {
     if (!confirm('Delete this test case?')) return;
     await fetch(`/api/tests/${id}`, { method: 'DELETE' });
@@ -515,10 +576,13 @@ export default function TestsPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 12, flex: 1 }} onClick={addStep}>
+                  <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={addStep}>
                     + Add Step
                   </button>
-                  <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: 12, flex: 1 }} onClick={saveSteps} disabled={savingSteps}>
+                  <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={() => startRecord(selectedTestForSteps)} disabled={recording}>
+                    {recording ? 'Opening...' : 'Record'}
+                  </button>
+                  <button className="btn btn-primary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={saveSteps} disabled={savingSteps}>
                     {savingSteps ? 'Saving...' : 'Save Steps'}
                   </button>
                 </div>
@@ -539,26 +603,28 @@ export default function TestsPage() {
                           <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)' }}>Step {idx + 1}</span>
                           <div style={{ display: 'flex', gap: 4 }}>
                             <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
-                              onClick={() => moveStepUp(idx)} disabled={idx === 0}>▲</button>
+                              onClick={() => moveStepUp(idx)} disabled={idx === 0}>Up</button>
                             <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
-                              onClick={() => moveStepDown(idx)} disabled={idx === localSteps.length - 1}>▼</button>
+                              onClick={() => moveStepDown(idx)} disabled={idx === localSteps.length - 1}>Down</button>
+                            <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
+                              onClick={() => startRecord(selectedTestForSteps, idx)} disabled={recording}>Record from here</button>
                             <button type="button" className="btn btn-danger" style={{ padding: '2px 5px', fontSize: 9 }}
-                              onClick={() => deleteStep(idx)}>Delete</button>
+                              onClick={() => deleteStep(idx)} disabled={idx === 0}>Delete</button>
                           </div>
                         </div>
 
                         <div className="form-group">
                           <label style={{ fontSize: 10.5 }}>Action</label>
-                          <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.action} onChange={e => updateStep(idx, 'action', e.target.value)}>
+                          <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.action} onChange={e => updateStep(idx, 'action', e.target.value)} disabled={idx === 0}>
                             <option>Click</option>
                             <option>Type</option>
                             <option>Assert Visible</option>
                             <option>Assert Text</option>
-                            <option>Navigate</option>
+                            {idx === 0 && <option>Navigate</option>}
                           </select>
                         </div>
 
-                        {step.action !== 'Navigate' && (
+                        {idx > 0 && step.action !== 'Navigate' && (
                           <>
                             <div className="form-group">
                               <label style={{ fontSize: 10.5 }}>Selector Type</label>
@@ -604,11 +670,11 @@ export default function TestsPage() {
                           </>
                         )}
 
-                        {(step.action === 'Type' || step.action === 'Assert Text' || step.action === 'Navigate') && (
+                        {(idx === 0 || step.action === 'Type' || step.action === 'Assert Text') && (
                           <div className="form-group">
-                            <label style={{ fontSize: 10.5 }}>{step.action === 'Navigate' ? 'URL' : 'Value / Text'}</label>
+                            <label style={{ fontSize: 10.5 }}>{idx === 0 ? 'Navigation URL' : 'Value / Text'}</label>
                             <input style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)}
-                              placeholder={step.action === 'Navigate' ? "https://..." : "Value to input or assert"}/>
+                              placeholder={idx === 0 ? "https://..." : "Value to input or assert"}/>
                           </div>
                         )}
                       </div>
@@ -627,8 +693,13 @@ export default function TestsPage() {
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+            {!editTest && (
+              <button className="btn btn-secondary" type="button" disabled={saving || recording} onClick={() => handleSave(null, true)}>
+                {saving || recording ? 'Opening...' : 'Create & Record'}
+              </button>
+            )}
             <button className="btn btn-primary" form="test-form" type="submit" disabled={saving}>
-              {saving ? 'Saving…' : editTest ? 'Save Changes' : 'Create Test'}
+              {saving ? 'Saving...' : editTest ? 'Save Changes' : 'Create Test'}
             </button>
           </>
         }

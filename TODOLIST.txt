@@ -29,7 +29,6 @@ SUGGESTIONS & DETAILS
 2. Free Hosting Suggestions:
 - Vercel: Best for static HTML or Next.js SPAs.
 - Netlify: Excellent for single page applications.
-- Render: Good choice if a Node backend api is needed.
 
 3. Low-Code Setup Suggestions:
 - Create automated `setup.bat` or script that installs node, runs npm install, and installs playwright browsers.
@@ -38,3 +37,7 @@ SUGGESTIONS & DETAILS
 4. Test Flow 2FA Suggestions:
 - Script automatic retrieval of 2FA validation codes via mail API (like Scandium mailbox or custom API).
 - Assertions: `expect(locator).toBeVisible()` for OTP input field, and visual feedback messages.
+
+***TO CONTINUE***
+- IMPLEMENT DEDICATED LOGIN PAGE AFTER BASE FEATURES ARE SETTLED
+- Check if the backend files and frontend should be integrated or make this project fully frontend focused

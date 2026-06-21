@@ -7,7 +7,9 @@ export default function SuitesPage() {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editSuite, setEditSuite] = useState(null);
   const [form, setForm] = useState({ name: '', description: '' });
+  const [selectedTestIds, setSelectedTestIds] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -23,6 +25,26 @@ export default function SuitesPage() {
       setLoading(false);
     });
   }, []);
+
+  function openCreate() {
+    setEditSuite(null);
+    setForm({ name: '', description: '' });
+    setSelectedTestIds([]);
+    setShowModal(true);
+  }
+
+  function openEdit(suite) {
+    setEditSuite(suite);
+    setForm({ name: suite.name, description: suite.description || '' });
+    setSelectedTestIds(tests.filter(t => t.suite === suite.name).map(t => t.id));
+    setShowModal(true);
+  }
+
+  function toggleSuiteTest(testId, checked) {
+    setSelectedTestIds(prev => checked
+      ? [...new Set([...prev, testId])]
+      : prev.filter(id => id !== testId));
+  }
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -41,6 +63,33 @@ export default function SuitesPage() {
       const newSuite = await res.json();
       setSuites(prev => [...prev, newSuite]);
       setShowModal(false);
+      setForm({ name: '', description: '' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleUpdate(e) {
+    e.preventDefault();
+    if (!editSuite) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/suites?id=${editSuite.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, testIds: selectedTestIds }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Failed to update suite');
+        return;
+      }
+      const data = await res.json();
+      setSuites(prev => prev.map(s => s.id === data.suite.id ? data.suite : s));
+      setTests(data.tests || []);
+      setShowModal(false);
+      setEditSuite(null);
+      setSelectedTestIds([]);
       setForm({ name: '', description: '' });
     } finally {
       setSaving(false);
@@ -92,7 +141,7 @@ export default function SuitesPage() {
         <div className="split-content">
           <div className="control-bar">
             <h2>Suites & Folders</h2>
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Create Suite</button>
+            <button className="btn btn-primary" onClick={openCreate}>+ Create Suite</button>
           </div>
 
           {suites.length === 0 ? (
@@ -123,6 +172,8 @@ export default function SuitesPage() {
                       <td><span className="pill">{count} Test{count !== 1 ? 's' : ''}</span></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}
+                            onClick={() => openEdit(suite)}>Edit</button>
                           <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
                             onClick={() => handleDelete(suite.id)}>Delete</button>
                         </div>
@@ -136,17 +187,17 @@ export default function SuitesPage() {
         </div>
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Create Suite"
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editSuite ? 'Edit Suite' : 'Create Suite'}
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
             <button className="btn btn-primary" form="suite-form" type="submit" disabled={saving}>
-              {saving ? 'Creating...' : 'Create'}
+              {saving ? 'Saving...' : editSuite ? 'Save Changes' : 'Create'}
             </button>
           </>
         }
       >
-        <form id="suite-form" onSubmit={handleCreate}>
+        <form id="suite-form" onSubmit={editSuite ? handleUpdate : handleCreate}>
           <div className="form-group">
             <label>Suite Name *</label>
             <input required value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
@@ -157,6 +208,26 @@ export default function SuitesPage() {
             <input value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))}
               placeholder="What does this suite cover?"/>
           </div>
+          {editSuite && (
+            <div className="form-group">
+              <label>Test Cases</label>
+              <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 260, overflowY: 'auto', padding: 8 }}>
+                {tests.length === 0 ? (
+                  <div style={{ color: 'var(--muted)', fontSize: 13, padding: 8 }}>No test cases available.</div>
+                ) : tests.map(test => (
+                  <label key={test.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 4px', fontSize: 13, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTestIds.includes(test.id)}
+                      onChange={e => toggleSuiteTest(test.id, e.target.checked)}
+                    />
+                    <span style={{ flex: 1 }}>{test.name}</span>
+                    <span style={{ color: 'var(--muted)', fontSize: 11 }}>{test.suite || 'All Tests'}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
       </Modal>
     </>
