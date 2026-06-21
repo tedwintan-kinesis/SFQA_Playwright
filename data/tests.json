@@ -5,10 +5,22 @@
     "url": "https://qa3-kms.kinesis.money/signup",
     "zephyrId": "SFT-T74",
     "suite": "Signup Flow",
-    "specFile": "tests/Signup Flow/new-kms-signup-to-sf-flow.spec.js",
+    "specFile": "tests/Signup Flow/new-kms-signup.spec.js",
     "type": "Web (Desktop)",
     "status": "passed",
     "lastRun": "2026-06-20T15:26:42Z",
     "created": "2026-06-20T15:18:44Z"
+  },
+  {
+    "id": "test-c2c22fb4",
+    "name": "Test run 2",
+    "url": "fsdfdsfsdf",
+    "zephyrId": "",
+    "suite": "Signup Flow",
+    "specFile": "tests/Signup Flow/test-run-2.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-21T15:35:57.443Z"
   }
 ]
