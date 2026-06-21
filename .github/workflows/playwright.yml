@@ -1,0 +1,54 @@
+name: Playwright Tests (Cloud - Coming Soon)
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_id:
+        description: 'Test ID to run'
+        required: true
+        type: string
+      spec_file:
+        description: 'Spec file path'
+        required: false
+        default: 'tests/new-kms-signup.spec.js'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: node node_modules/@playwright/test/cli.js install chromium --with-deps
+
+      - name: Run Playwright tests
+        id: playwright
+        run: |
+          node node_modules/@playwright/test/cli.js test ${{ inputs.spec_file }} \
+            --reporter=json \
+            --output=test-results/ || true
+        env:
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+
+      - name: Report to Zephyr Scale
+        if: always()
+        run: node zephyr-reporter.js ${{ steps.playwright.outcome == 'success' && 'pass' || 'fail' }}
+        env:
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7

@@ -1,0 +1,76 @@
+SOP: Salesforce Playwright Test Automation
+=========================================
+Standard Operating Procedure (SOP) for QA engineers creating and maintaining Salesforce Playwright automation scripts.
+
+1. Locator Strategy (Anti-Fragility)
+------------------------------------
+Salesforce dynamically generates HTML elements, tags, attributes, and classes. Do not use auto-generated class names (e.g., .slds-m-right_xx-small, .css-rvd1ty) or dynamic ID strings (e.g., #input-142) for targeting. These change during deployments.
+
+Always target user-visible elements:
+- 1st Priority: page.getByRole()
+  Example: page.getByRole('button', { name: 'Save' })
+- 2nd Priority: page.getByLabel()
+  Example: page.getByLabel('Stage')
+- 3rd Priority: page.getByText()
+  Example: page.getByText('Account Owner')
+- 4th Priority: page.getByPlaceholder()
+  Example: page.getByPlaceholder('Search Accounts...')
+- 5th Priority: Custom Test ID (data-testid)
+  Example: page.getByTestId('custom-submit')
+
+
+2. Locating Elements in Scoped Sections
+---------------------------------------
+To avoid selecting duplicate elements across complex Salesforce layouts, chain locators to limit search boundaries:
+1. Locate the container section (e.g., Card, Modal, Form).
+2. Query inside that scoped container.
+
+Example:
+// Scope to 'Account Information' section
+const section = page.locator('records-record-layout-section').filter({ hasText: 'Account Information' });
+// Interact with element inside that section
+await section.getByLabel('Phone').fill('1234567890');
+
+
+3. Page Object Model (POM) Structure
+------------------------------------
+Store all locators and element targets in a central reference file (Page Objects) instead of writing them directly into individual test spec files. If Salesforce updates its layout, modify paths once in the page object file to fix all tests.
+
+Example POM (pages/account-page.js):
+class AccountPage {
+  constructor(page) {
+    this.page = page;
+    this.saveBtn = page.getByRole('button', { name: 'Save' });
+    this.nameInput = page.getByLabel('Account Name');
+  }
+
+  async createAccount(name) {
+    await this.nameInput.fill(name);
+    await this.saveBtn.click();
+  }
+}
+module.exports = { AccountPage };
+
+
+4. Salesforce Specific Behaviors
+---------------------------------
+- Shadow DOM: Playwright bypasses open shadow roots automatically. Use standard locators directly.
+- IFrames (Visualforce / AppExchange): Use frameLocator() to interact with elements inside iframe boundaries.
+  Example:
+  const myFrame = page.frameLocator('iframe[title="Visualforce Page"]');
+  await myFrame.getByRole('button', { name: 'Submit' }).click();
+
+
+5. Waiting and Assertions
+-------------------------
+- Leverage Playwright's built-in auto-waiting logic before performing actions (clicks, inputs).
+- Use web-first assertions (e.g., expect(locator).toBeVisible()).
+- Never use hardcoded wait timers like page.waitForTimeout(milliseconds).
+
+
+6. Test Cycle & Zephyr integration
+----------------------------------
+Every test run must report results back to Zephyr Scale:
+1. Match test description to Zephyr Test Case Key (e.g., SFT-T74).
+2. Run test execution.
+3. Call zephyr-reporter.js script with run outcome to sync.

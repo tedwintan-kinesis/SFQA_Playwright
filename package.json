@@ -1,0 +1,30 @@
+{
+  "name": "sfqa_playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node node_modules/@playwright/test/cli.js test",
+    "test:headed": "node node_modules/@playwright/test/cli.js test --headed",
+    "report:zephyr": "node zephyr-reporter.js pass",
+    "test:zephyr": "node node_modules/@playwright/test/cli.js test && node zephyr-reporter.js pass || node zephyr-reporter.js fail"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "axios": "^1.18.0",
+    "dotenv": "^17.4.2"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "uuid": "^14.0.1"
+  }
+}

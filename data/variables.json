@@ -1,0 +1,32 @@
+[
+  {
+    "id": "var-001",
+    "key": "login_button",
+    "desc": "Salesforce primary login submit button",
+    "fallbacks": [
+      "[data-testid='login']",
+      "button[type='submit']",
+      "text=Login"
+    ]
+  },
+  {
+    "id": "var-002",
+    "key": "verification_code_field",
+    "desc": "2FA OTP verification code input field",
+    "fallbacks": [
+      "input[name='otc']",
+      "#otc-input",
+      "input[placeholder='Enter code']"
+    ]
+  },
+  {
+    "id": "var-003",
+    "key": "signup_email_input",
+    "desc": "KMS signup page email input field",
+    "fallbacks": [
+      "#root > main > div.MuiStack-root.css-rvd1ty > form > div.MuiFormControl-root.MuiFormControl-fullWidth.css-1mvs7q6 > div > div > input",
+      "input[type='email']",
+      "input[placeholder*='email']"
+    ]
+  }
+]

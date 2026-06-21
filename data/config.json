@@ -1,0 +1,5 @@
+{
+  "projectName": "SFQA Playwright",
+  "zephyrProjectKey": "SFT",
+  "zephyrBaseUrl": "https://api.zephyrscale.smartbear.com/v2"
+}

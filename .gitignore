@@ -1,0 +1,11 @@
+node_modules/
+test-results/
+playwright-report/
+.playwright/
+
+# Next.js build output
+.next/
+out/
+
+# Secrets — never commit
+.env
