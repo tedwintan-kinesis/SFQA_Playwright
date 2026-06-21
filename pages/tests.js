@@ -170,9 +170,9 @@ export default function TestsPage() {
                     </td>
                     <td><span className="pill pill-suite">{test.suite}</span></td>
                     <td>
-                      {test.zephyrId
+                      {test.zephyrId && test.zephyrId !== '-'
                         ? <span className="pill pill-zephyr">{test.zephyrId}</span>
-                        : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>}
+                        : <span style={{ color: 'var(--muted)', fontSize: 12 }}>-</span>}
                     </td>
                     <td>
                       <span className={`status-dot ${test.status || 'idle'}`}/>
@@ -225,7 +225,7 @@ export default function TestsPage() {
               placeholder="tests/new-kms-signup.spec.js"/>
           </div>
           <div className="form-group">
-            <label>Zephyr Case ID</label>
+            <label>Zephyr Case ID (Optional)</label>
             <input value={form.zephyrId} onChange={e => setForm(f => ({...f, zephyrId: e.target.value}))}
               placeholder="e.g., SFT-T74"/>
           </div>

@@ -11,6 +11,29 @@ import { readTests, readRuns, writeRuns, writeTests } from '../../lib/dataStore'
 import { spawn } from 'child_process';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
+import fs from 'fs';
+
+function findNewScreenshots(dir, startTime) {
+  let results = [];
+  if (!fs.existsSync(dir)) return results;
+  const list = fs.readdirSync(dir);
+  for (const file of list) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      results = results.concat(findNewScreenshots(filePath, startTime));
+    } else if (path.extname(file).toLowerCase() === '.png') {
+      if (stat.mtimeMs >= startTime) {
+        results.push({
+          path: filePath,
+          name: file
+        });
+      }
+    }
+  }
+  return results;
+}
+
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -56,9 +79,12 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
+  const runLogs = [];
   const send = (line, type = 'log') => {
+    runLogs.push(line);
     res.write(`data: ${JSON.stringify({ type, line })}\n\n`);
   };
+
 
   send(`[SFQA] Starting local Playwright run for: ${test.name}`, 'info');
   send(`[SFQA] Spec: ${test.specFile || 'tests/new-kms-signup.spec.js'}`, 'info');
@@ -99,23 +125,11 @@ export default async function handler(req, res) {
       await writeTests(testsNow);
     }
 
-    // Save run record
-    const runs = readRuns();
-    runs.unshift({
-      id: runId,
-      testId: test.id,
-      testName: test.name,
-      zephyrId: test.zephyrId,
-      status,
-      mode: 'local',
-      duration,
-      completedAt: new Date().toISOString(),
-      triggeredBy: 'dashboard',
-    });
-    await writeRuns(runs);
+    let zephyrId = test.zephyrId || '-';
+    let zephyrCycle = '-';
 
-    // Post to Zephyr if token is set
-    if (process.env.ZEPHYR_TOKEN && test.zephyrId) {
+    // Post to Zephyr if token is set and test is linked
+    if (process.env.ZEPHYR_TOKEN && test.zephyrId && test.zephyrId !== '-') {
       send(`[Zephyr] Reporting result to ${test.zephyrId}...`, 'info');
       try {
         const axios = require('axios');
@@ -128,20 +142,65 @@ export default async function handler(req, res) {
         const latestCycle = cycles[0];
 
         if (latestCycle) {
-          await axios.post('https://api.zephyrscale.smartbear.com/v2/testexecutions', {
+          zephyrCycle = latestCycle.key || '-';
+          
+          const failureSummary = status === 'failed'
+            ? '\n\nError Output:\n' + runLogs.filter(l => !l.startsWith('[SFQA]')).slice(-10).join('\n')
+            : '';
+          const comment = `SFQA Dashboard automated run — ${new Date().toISOString()}${failureSummary}`;
+
+          const execRes = await axios.post('https://api.zephyrscale.smartbear.com/v2/testexecutions', {
             projectKey: 'SFT',
             testCaseKey: test.zephyrId,
             testCycleKey: latestCycle.key,
             statusName: status === 'passed' ? 'Pass' : 'Fail',
-            comment: `SFQA Dashboard automated run — ${new Date().toISOString()}`,
+            comment,
           }, { headers: { Authorization: `Bearer ${process.env.ZEPHYR_TOKEN}`, 'Content-Type': 'application/json' } });
 
           send(`[Zephyr] Execution posted to cycle ${latestCycle.key} ✅`, 'success');
+
+          // Upload screenshots if any
+          const execIdOrKey = execRes.data.key || execRes.data.id;
+          if (execIdOrKey) {
+            const screenshots = findNewScreenshots(path.join(rootDir, 'test-results'), startTime);
+            for (const screenshot of screenshots) {
+              try {
+                send(`[Zephyr] Uploading screenshot evidence: ${screenshot.name}...`, 'info');
+                const fileData = fs.readFileSync(screenshot.path);
+                const url = `https://api.zephyrscale.smartbear.com/v2/testexecutions/${execIdOrKey}/attachments/${encodeURIComponent(screenshot.name)}`;
+                await axios.put(url, fileData, {
+                  headers: {
+                    Authorization: `Bearer ${process.env.ZEPHYR_TOKEN}`,
+                    'Content-Type': 'application/octet-stream'
+                  }
+                });
+                send(`[Zephyr] Uploaded screenshot: ${screenshot.name} ✅`, 'success');
+              } catch (uploadErr) {
+                send(`[Zephyr] Warning: Failed to upload screenshot ${screenshot.name} — ${uploadErr.message}`, 'error');
+              }
+            }
+          }
         }
       } catch (zErr) {
         send(`[Zephyr] Warning: Could not post to Zephyr — ${zErr.message}`, 'error');
       }
     }
+
+    // Save run record
+    const runs = readRuns();
+    runs.unshift({
+      id: runId,
+      testId: test.id,
+      testName: test.name,
+      zephyrId,
+      zephyrCycle,
+      status,
+      mode: 'local',
+      duration,
+      completedAt: new Date().toISOString(),
+      triggeredBy: 'dashboard',
+    });
+    await writeRuns(runs);
 
     send(`__DONE__`, 'done');
     res.end();

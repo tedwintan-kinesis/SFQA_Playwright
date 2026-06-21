@@ -11,13 +11,33 @@ const axios = require('axios');
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const ZEPHYR_TOKEN = process.env.ZEPHYR_TOKEN;
-if (!ZEPHYR_TOKEN) {
-  console.error('❌ ZEPHYR_TOKEN not set. Create a .env file — see .env.example');
-  process.exit(1);
-}
 const BASE_URL = 'https://api.zephyrscale.smartbear.com/v2';
 const PROJECT_KEY = 'SFT';
-const TEST_CASE_KEY = 'SFT-T74';
+const TEST_CASE_KEY = process.env.ZEPHYR_TEST_CASE_KEY || '';
+
+const fs = require('fs');
+const path = require('path');
+
+function findNewScreenshots(dir) {
+  let results = [];
+  if (!fs.existsSync(dir)) return results;
+  const list = fs.readdirSync(dir);
+  for (const file of list) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      results = results.concat(findNewScreenshots(filePath));
+    } else if (path.extname(file).toLowerCase() === '.png') {
+      results.push({
+        path: filePath,
+        name: file,
+        mtime: stat.mtimeMs
+      });
+    }
+  }
+  return results;
+}
+
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const headers = {
@@ -58,6 +78,17 @@ async function main() {
   const statusArg = (process.argv[2] || 'pass').toLowerCase();
   const statusName = statusArg === 'fail' ? 'Fail' : 'Pass';
 
+  if (!ZEPHYR_TOKEN) {
+    console.log('ℹ️ ZEPHYR_TOKEN not set. Skipping Zephyr report.');
+    process.exit(0);
+  }
+
+  if (!TEST_CASE_KEY || TEST_CASE_KEY === '-') {
+    console.log('ℹ️ Test case not linked to Zephyr. Skipping Zephyr report.');
+    process.exit(0);
+  }
+
+
   try {
     console.log(`Fetching latest test cycle for project: ${PROJECT_KEY}...`);
     const cycle = await getLatestTestCycle();
@@ -65,6 +96,30 @@ async function main() {
 
     const execution = await createTestExecution(cycle.key || cycle.id, statusName);
     console.log('✅ Execution created:', JSON.stringify(execution, null, 2));
+
+    const execIdOrKey = execution.key || execution.id;
+    if (execIdOrKey) {
+      const now = Date.now();
+      const screenshotsDir = path.join(__dirname, 'test-results');
+      const screenshots = findNewScreenshots(screenshotsDir)
+        .filter(s => now - s.mtime < 120000); // modified in last 2 minutes
+
+      for (const screenshot of screenshots) {
+        try {
+          console.log(`Uploading screenshot ${screenshot.name} to Zephyr execution ${execIdOrKey}...`);
+          const fileData = fs.readFileSync(screenshot.path);
+          await axios.put(`${BASE_URL}/testexecutions/${execIdOrKey}/attachments/${encodeURIComponent(screenshot.name)}`, fileData, {
+            headers: {
+              Authorization: `Bearer ${ZEPHYR_TOKEN}`,
+              'Content-Type': 'application/octet-stream'
+            }
+          });
+          console.log(`✅ Uploaded screenshot: ${screenshot.name}`);
+        } catch (uploadErr) {
+          console.error(`❌ Failed to upload screenshot ${screenshot.name}:`, uploadErr.message);
+        }
+      }
+    }
   } catch (err) {
     const errData = err.response?.data || err.message;
     console.error('❌ Zephyr API error:', JSON.stringify(errData, null, 2));

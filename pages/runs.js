@@ -187,9 +187,9 @@ export default function RunsPage() {
                       {run.testName}
                     </td>
                     <td>
-                      {run.zephyrId
+                      {run.zephyrId && run.zephyrId !== '-'
                         ? <span className="pill pill-zephyr">{run.zephyrId}</span>
-                        : <span style={{ color: 'var(--muted)' }}>—</span>}
+                        : <span style={{ color: 'var(--muted)' }}>-</span>}
                     </td>
                     <td><span className="pill">{run.mode || 'local'}</span></td>
                     <td>

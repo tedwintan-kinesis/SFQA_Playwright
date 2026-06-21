@@ -102,14 +102,14 @@ export default function ReportsPage() {
                     <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{run.id}</td>
                     <td style={{ fontWeight: 500 }}>{run.testName}</td>
                     <td>
-                      {run.zephyrId
+                      {run.zephyrId && run.zephyrId !== '-'
                         ? <span className="pill pill-zephyr">{run.zephyrId}</span>
-                        : <span style={{ color: 'var(--muted)' }}>—</span>}
+                        : <span style={{ color: 'var(--muted)' }}>-</span>}
                     </td>
                     <td>
-                      {run.zephyrCycle
+                      {run.zephyrCycle && run.zephyrCycle !== '-'
                         ? <span className="pill">{run.zephyrCycle}</span>
-                        : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>}
+                        : <span style={{ color: 'var(--muted)', fontSize: 12 }}>-</span>}
                     </td>
                     <td>
                       <span className={`status-dot ${run.status}`}/>
