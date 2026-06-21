@@ -24,6 +24,135 @@ export default function TestsPage() {
   const [newFolderName, setNewFolderName] = useState('');
   const [savingFolder, setSavingFolder] = useState(false);
 
+  // Steps Builder state
+  const [selectedTestForSteps, setSelectedTestForSteps] = useState(null);
+  const [localSteps, setLocalSteps] = useState([]);
+  const [globalVars, setGlobalVars] = useState([]);
+  const [savingSteps, setSavingSteps] = useState(false);
+
+  useEffect(() => {
+    if (selectedTestForSteps) {
+      setLocalSteps(selectedTestForSteps.steps || []);
+    } else {
+      setLocalSteps([]);
+    }
+  }, [selectedTestForSteps]);
+
+  useEffect(() => {
+    fetch('/api/variables')
+      .then(res => res.json())
+      .then(data => setGlobalVars(data || []))
+      .catch(err => console.error(err));
+  }, []);
+
+  const addStep = () => {
+    const newStep = {
+      id: `step-${Date.now()}`,
+      action: 'Click',
+      selectorType: 'global',
+      variableId: globalVars[0]?.id || '',
+      fallbacks: ['', '', ''],
+      value: ''
+    };
+    setLocalSteps(prev => [...prev, newStep]);
+  };
+
+  const deleteStep = (idx) => {
+    setLocalSteps(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const moveStepUp = (idx) => {
+    if (idx === 0) return;
+    setLocalSteps(prev => {
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[idx - 1];
+      copy[idx - 1] = temp;
+      return copy;
+    });
+  };
+
+  const moveStepDown = (idx) => {
+    setLocalSteps(prev => {
+      if (idx === prev.length - 1) return prev;
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[idx + 1];
+      copy[idx + 1] = temp;
+      return copy;
+    });
+  };
+
+  const updateStep = (idx, field, value) => {
+    setLocalSteps(prev => prev.map((step, i) => {
+      if (i === idx) {
+        const updated = { ...step, [field]: value };
+        if (field === 'selectorType') {
+          if (value === 'manual' && (!step.fallbacks || step.fallbacks.length === 0)) {
+            updated.fallbacks = ['', '', ''];
+          } else if (value === 'global' && !step.variableId) {
+            updated.variableId = globalVars[0]?.id || '';
+          }
+        }
+        return updated;
+      }
+      return step;
+    }));
+  };
+
+  const updateStepFallback = (stepIdx, fallbackIdx, val) => {
+    setLocalSteps(prev => prev.map((step, i) => {
+      if (i === stepIdx) {
+        const fbs = step.fallbacks ? [...step.fallbacks] : [];
+        while (fbs.length <= fallbackIdx) {
+          fbs.push('');
+        }
+        fbs[fallbackIdx] = val;
+        return { ...step, fallbacks: fbs };
+      }
+      return step;
+    }));
+  };
+
+  const addStepFallbackField = (stepIdx) => {
+    setLocalSteps(prev => prev.map((step, i) => {
+      if (i === stepIdx) {
+        const fbs = step.fallbacks ? [...step.fallbacks] : ['', '', ''];
+        return { ...step, fallbacks: [...fbs, ''] };
+      }
+      return step;
+    }));
+  };
+
+  const saveSteps = async () => {
+    if (!selectedTestForSteps) return;
+    setSavingSteps(true);
+    try {
+      const payload = {
+        ...selectedTestForSteps,
+        steps: localSteps
+      };
+      const res = await fetch(`/api/tests/${selectedTestForSteps.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const updatedTest = await res.json();
+        setTests(prev => prev.map(t => t.id === updatedTest.id ? updatedTest : t));
+        setSelectedTestForSteps(updatedTest);
+        alert('Steps saved successfully!');
+      } else {
+        alert('Failed to save steps.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error saving steps.');
+    } finally {
+      setSavingSteps(false);
+    }
+  };
+
   useEffect(() => {
     Promise.all([
       fetch('/api/tests').then(res => res.json()),
@@ -256,113 +385,239 @@ export default function TestsPage() {
         </div>
 
         {/* Content */}
-        <div className="split-content">
-          <div className="control-bar">
+        <div className="split-content" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="control-bar" style={{ flexShrink: 0 }}>
             <h2>{activeSuite}</h2>
             <div className="control-right">
               <button className="btn btn-primary" onClick={openCreate}>+ Create Test</button>
             </div>
           </div>
 
-          <div className="subtabs">
+          <div className="subtabs" style={{ marginBottom: 16, flexShrink: 0 }}>
             <button className="subtab active">Web</button>
             <button className="subtab">Mobile</button>
             <button className="subtab">API</button>
           </div>
 
-          <div className="control-bar">
-            <input className="search-input" placeholder="Search by name or Zephyr ID…"
-              value={search} onChange={e => setSearch(e.target.value)} />
-            <div className="filter-group">
-              {[['all','All'],['passed','Passed'],['failed','Failed'],['running','Running']].map(([val, label]) => (
-                <button key={val} className={`filter-btn${filter === val ? ' active' : ''}`}
-                  onClick={() => setFilter(val)}>
-                  {label}
-                  {val !== 'all' && <span className={`tab-badge ${val}`}>{counts[val] ?? 0}</span>}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div style={{ display: 'flex', gap: 24, flex: 1, overflow: 'hidden', minHeight: 0 }}>
+            {/* Left Column (Table & Controls) */}
+            <div style={{ flex: selectedTestForSteps ? 6.5 : 10, display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', minWidth: 0 }}>
+              <div className="control-bar" style={{ flexShrink: 0 }}>
+                <input className="search-input" placeholder="Search by name or Zephyr ID…"
+                  value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: '100%' }} />
+                <div className="filter-group">
+                  {[['all','All'],['passed','Passed'],['failed','Failed'],['running','Running']].map(([val, label]) => (
+                    <button key={val} className={`filter-btn${filter === val ? ' active' : ''}`}
+                      onClick={() => setFilter(val)}>
+                      {label}
+                      {val !== 'all' && <span className={`tab-badge ${val}`}>{counts[val] ?? 0}</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {filtered.length === 0 ? (
-            <div className="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
-              </svg>
-              <h4>No Tests Found</h4>
-              <p>Create your first test case or change filters to get started.</p>
-            </div>
-          ) : (
-            <div>
-              {selectedIds.length > 0 && (
-                <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginBottom: 10 }}>
-                  Selected {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''}. Drag any row to move them.
+              {filtered.length === 0 ? (
+                <div className="empty-state" style={{ flex: 1 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+                  </svg>
+                  <h4>No Tests Found</h4>
+                  <p>Create your first test case or change filters to get started.</p>
+                </div>
+              ) : (
+                <div style={{ flex: 1 }}>
+                  {selectedIds.length > 0 && (
+                    <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginBottom: 10 }}>
+                      Selected {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''}. Drag any row to move them.
+                    </div>
+                  )}
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: 40, textAlign: 'center' }}>
+                          <input type="checkbox"
+                            checked={filtered.length > 0 && filtered.every(t => selectedIds.includes(t.id))}
+                            onChange={handleSelectAll} />
+                        </th>
+                        <th>Name</th>
+                        <th>Suite</th>
+                        <th>Zephyr ID</th>
+                        <th>Status</th>
+                        <th>Last Run</th>
+                        <th>Created</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map(test => {
+                        const isSelected = selectedIds.includes(test.id);
+                        const isActiveRow = selectedTestForSteps?.id === test.id;
+                        return (
+                          <tr key={test.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, test.id)}
+                            onDragEnd={handleDragEnd}
+                            onClick={() => setSelectedTestForSteps(test)}
+                            className={`${isSelected ? 'selected-row' : ''} ${isActiveRow ? 'active-row' : ''}`}
+                            style={{ cursor: 'grab', background: isActiveRow ? 'var(--primary-light)' : 'transparent' }}
+                          >
+                            <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                              <input type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => handleSelectOne(e, test.id)} />
+                            </td>
+                            <td>
+                              <div style={{ fontWeight: 600 }}>{test.name}</div>
+                              <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 2 }}>{test.url}</div>
+                            </td>
+                            <td><span className="pill pill-suite">{test.suite}</span></td>
+                            <td>
+                              {test.zephyrId && test.zephyrId !== '-'
+                                ? <span className="pill pill-zephyr">{test.zephyrId}</span>
+                                : <span style={{ color: 'var(--muted)', fontSize: 12 }}>-</span>}
+                            </td>
+                            <td>
+                              <span className={`status-dot ${test.status || 'idle'}`}/>
+                              {(test.status || 'idle').toUpperCase()}
+                            </td>
+                            <td style={{ fontSize: 12.5, color: 'var(--muted)' }}>{fmtDate(test.lastRun)}</td>
+                            <td style={{ fontSize: 12.5, color: 'var(--muted)' }}>{fmtDate(test.created)}</td>
+                            <td onClick={(e) => e.stopPropagation()}>
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}
+                                  onClick={() => openEdit(test)}>Edit</button>
+                                <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
+                                  onClick={() => handleDelete(test.id)}>Delete</button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 40, textAlign: 'center' }}>
-                      <input type="checkbox"
-                        checked={filtered.length > 0 && filtered.every(t => selectedIds.includes(t.id))}
-                        onChange={handleSelectAll} />
-                    </th>
-                    <th>Name</th>
-                    <th>Suite</th>
-                    <th>Zephyr ID</th>
-                    <th>Status</th>
-                    <th>Last Run</th>
-                    <th>Created</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(test => {
-                    const isSelected = selectedIds.includes(test.id);
-                    return (
-                      <tr key={test.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, test.id)}
-                        onDragEnd={handleDragEnd}
-                        className={isSelected ? 'selected-row' : ''}
-                        style={{ cursor: 'grab' }}
-                      >
-                        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-                          <input type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => handleSelectOne(e, test.id)} />
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{test.name}</div>
-                          <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 2 }}>{test.url}</div>
-                        </td>
-                        <td><span className="pill pill-suite">{test.suite}</span></td>
-                        <td>
-                          {test.zephyrId && test.zephyrId !== '-'
-                            ? <span className="pill pill-zephyr">{test.zephyrId}</span>
-                            : <span style={{ color: 'var(--muted)', fontSize: 12 }}>-</span>}
-                        </td>
-                        <td>
-                          <span className={`status-dot ${test.status || 'idle'}`}/>
-                          {(test.status || 'idle').toUpperCase()}
-                        </td>
-                        <td style={{ fontSize: 12.5, color: 'var(--muted)' }}>{fmtDate(test.lastRun)}</td>
-                        <td style={{ fontSize: 12.5, color: 'var(--muted)' }}>{fmtDate(test.created)}</td>
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}
-                              onClick={() => openEdit(test)}>Edit</button>
-                            <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
-                              onClick={() => handleDelete(test.id)}>Delete</button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
-          )}
+
+            {/* Right Column (Steps Builder) */}
+            {selectedTestForSteps && (
+              <div style={{
+                flex: 3.5, background: '#fff', border: '1px solid var(--border)', borderRadius: 8,
+                padding: 20, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 340,
+                boxShadow: 'var(--shadow)', maxHeight: '100%', overflowY: 'auto'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 10, flexShrink: 0 }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <h3 style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--primary)' }}>Steps Builder</h3>
+                    <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 240 }} title={selectedTestForSteps.name}>{selectedTestForSteps.name}</div>
+                  </div>
+                  <button className="modal-close" style={{ cursor: 'pointer', border: 'none', background: 'none' }} onClick={() => setSelectedTestForSteps(null)}>&times;</button>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 12, flex: 1 }} onClick={addStep}>
+                    + Add Step
+                  </button>
+                  <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: 12, flex: 1 }} onClick={saveSteps} disabled={savingSteps}>
+                    {savingSteps ? 'Saving...' : 'Save Steps'}
+                  </button>
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
+                  {localSteps.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--muted)', fontSize: 13 }}>
+                      No steps configured yet. Click "+ Add Step" to start.
+                    </div>
+                  ) : (
+                    localSteps.map((step, idx) => (
+                      <div key={step.id || idx} style={{
+                        border: '1px solid var(--border)', borderRadius: 8, padding: 12,
+                        background: '#FAFBFD', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8,
+                        position: 'relative'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)' }}>Step {idx + 1}</span>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
+                              onClick={() => moveStepUp(idx)} disabled={idx === 0}>▲</button>
+                            <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
+                              onClick={() => moveStepDown(idx)} disabled={idx === localSteps.length - 1}>▼</button>
+                            <button type="button" className="btn btn-danger" style={{ padding: '2px 5px', fontSize: 9 }}
+                              onClick={() => deleteStep(idx)}>Delete</button>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label style={{ fontSize: 10.5 }}>Action</label>
+                          <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.action} onChange={e => updateStep(idx, 'action', e.target.value)}>
+                            <option>Click</option>
+                            <option>Type</option>
+                            <option>Assert Visible</option>
+                            <option>Assert Text</option>
+                            <option>Navigate</option>
+                          </select>
+                        </div>
+
+                        {step.action !== 'Navigate' && (
+                          <>
+                            <div className="form-group">
+                              <label style={{ fontSize: 10.5 }}>Selector Type</label>
+                              <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.selectorType || 'global'} onChange={e => updateStep(idx, 'selectorType', e.target.value)}>
+                                <option value="global">Select from Global Variable</option>
+                                <option value="manual">Manual Input</option>
+                              </select>
+                            </div>
+
+                            {(step.selectorType || 'global') === 'global' ? (
+                              <div className="form-group">
+                                <label style={{ fontSize: 10.5 }}>Global Variable</label>
+                                <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.variableId} onChange={e => updateStep(idx, 'variableId', e.target.value)}>
+                                  {globalVars.map(v => (
+                                    <option key={v.id} value={v.id}>{v.key} ({v.fallbacks?.[0] || 'no fallback'})</option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : (
+                              <div className="form-group">
+                                <label style={{ fontSize: 10.5 }}>Fallback Element Selectors</label>
+                                {(step.fallbacks || ['', '', '']).map((fb, fIdx) => (
+                                  <div key={fIdx} className="fallback-row" style={{ marginBottom: 4 }}>
+                                    <span className="fallback-num" style={{ fontSize: 10 }}>P{fIdx + 1}</span>
+                                    <input className="fallback-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                      value={fb} onChange={e => updateStepFallback(idx, fIdx, e.target.value)}
+                                      placeholder={
+                                        fIdx === 0 ? "Primary selector (required)"
+                                      : fIdx === 1 ? "Fallback selector (optional)"
+                                      : fIdx === 2 ? "Last-resort selector (optional)"
+                                      : `Additional selector ${fIdx + 1} (optional)`
+                                      }
+                                    />
+                                  </div>
+                                ))}
+                                <button type="button" className="btn btn-secondary" 
+                                  style={{ marginTop: 2, padding: '3px 8px', fontSize: 10.5, alignSelf: 'flex-start' }}
+                                  onClick={() => addStepFallbackField(idx)}>
+                                  + Add Fallback Selector
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {(step.action === 'Type' || step.action === 'Assert Text' || step.action === 'Navigate') && (
+                          <div className="form-group">
+                            <label style={{ fontSize: 10.5 }}>{step.action === 'Navigate' ? 'URL' : 'Value / Text'}</label>
+                            <input style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)}
+                              placeholder={step.action === 'Navigate' ? "https://..." : "Value to input or assert"}/>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

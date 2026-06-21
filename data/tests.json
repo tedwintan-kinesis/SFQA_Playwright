@@ -4,20 +4,47 @@
     "name": "New KMS Signup to SF flow",
     "url": "https://qa3-kms.kinesis.money/signup",
     "zephyrId": "SFT-T74",
-    "suite": "Signup Flow",
-    "specFile": "tests/Signup Flow/new-kms-signup.spec.js",
+    "suite": "Salesforce Integration",
+    "specFile": "tests/Salesforce Integration/new-kms-signup-to-sf-flow.spec.js",
     "type": "Web (Desktop)",
     "status": "passed",
     "lastRun": "2026-06-20T15:26:42Z",
-    "created": "2026-06-20T15:18:44Z"
+    "created": "2026-06-20T15:18:44Z",
+    "steps": [
+      {
+        "id": "step-1782057541860",
+        "action": "Click",
+        "selectorType": "manual",
+        "variableId": "var-001",
+        "fallbacks": [
+          ".button",
+          "",
+          "",
+          ""
+        ],
+        "value": ""
+      },
+      {
+        "id": "step-1782057560013",
+        "action": "Navigate",
+        "selectorType": "global",
+        "variableId": "var-001",
+        "fallbacks": [
+          "",
+          "",
+          ""
+        ],
+        "value": "https://google.com"
+      }
+    ]
   },
   {
     "id": "test-49926915",
     "name": "Test run 3",
     "url": "fsdsdff",
     "zephyrId": "",
-    "suite": "Salesforce Integration",
-    "specFile": "tests/Salesforce Integration/test-run-3.spec.js",
+    "suite": "test folder",
+    "specFile": "tests/test folder/test-run-3.spec.js",
     "type": "Web (Desktop)",
     "status": "idle",
     "lastRun": null,

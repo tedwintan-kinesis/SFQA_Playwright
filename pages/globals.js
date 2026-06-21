@@ -47,9 +47,19 @@ export default function GlobalsPage() {
 
   function openEdit(v) {
     setEditVar(v);
-    const padded = [...(v.fallbacks || []), '', '', ''].slice(0, 3);
+    const padded = v.fallbacks ? [...v.fallbacks] : [];
+    while (padded.length < 3) {
+      padded.push('');
+    }
     setForm({ key: v.key, desc: v.desc || '', fallbacks: padded });
     setShowModal(true);
+  }
+
+  function addFallbackField() {
+    setForm(f => ({
+      ...f,
+      fallbacks: [...f.fallbacks, '']
+    }));
   }
 
   function setFallback(idx, val) {
@@ -201,24 +211,30 @@ export default function GlobalsPage() {
           </div>
           <div className="form-group">
             <label>Selector Fallbacks (P1 is tried first)</label>
-            {[0, 1, 2].map(i => (
+            {form.fallbacks.map((fb, i) => (
               <div key={i} className="fallback-row">
                 <span className="fallback-num" style={{
                   color: i === 0 ? 'var(--primary)' : 'var(--muted)',
                   fontWeight: i === 0 ? 700 : 500,
                 }}>P{i + 1}</span>
                 <input className="fallback-input"
-                  value={form.fallbacks[i]}
+                  value={form.fallbacks[i] || ''}
                   onChange={e => setFallback(i, e.target.value)}
                   required={i === 0}
                   placeholder={
                     i === 0 ? "Primary selector (required)"
                   : i === 1 ? "Fallback selector (optional)"
-                  : "Last-resort selector (optional)"
+                  : i === 2 ? "Last-resort selector (optional)"
+                  : `Additional selector ${i + 1} (optional)`
                   }
                 />
               </div>
             ))}
+            <button type="button" className="btn btn-secondary" 
+              style={{ marginTop: 4, padding: '4px 10px', fontSize: 11.5, alignSelf: 'flex-start' }}
+              onClick={addFallbackField}>
+              + Add Selector
+            </button>
           </div>
         </form>
       </Modal>
