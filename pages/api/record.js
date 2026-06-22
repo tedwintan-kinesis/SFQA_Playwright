@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+﻿import { spawn } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -9,12 +9,16 @@ function escapeString(value) {
 }
 
 function buildPrepSpec(test, throughStepIndex) {
-  const steps = (test.steps || []).slice(0, throughStepIndex + 1);
+  const steps = Number.isInteger(throughStepIndex)
+    ? (test.steps || []).slice(0, throughStepIndex + 1)
+    : [];
   let body = `  await page.goto('${escapeString(test.url)}');\n`;
+  body += `  await showRecordingIndicator(page);\n`;
 
   steps.forEach((step, idx) => {
     if (idx === 0 || step.action === 'Navigate') {
       body += `  await page.goto('${escapeString(step.value || test.url)}');\n`;
+      body += `  await showRecordingIndicator(page);\n`;
     } else if (step.action === 'Click') {
       const selector = (step.fallbacks || []).find(s => s && s.trim()) || 'body';
       body += `  await page.locator('${escapeString(selector)}').first().click();\n`;
@@ -30,6 +34,56 @@ function buildPrepSpec(test, throughStepIndex) {
   body += `  await page.pause();\n`;
 
   return `const { test } = require('@playwright/test');
+
+async function showRecordingIndicator(page) {
+  await page.evaluate(() => {
+    const id = 'sfqa-recording-indicator';
+    const existing = document.getElementById(id);
+    if (existing) return;
+
+    const bar = document.createElement('div');
+    bar.id = id;
+    bar.style.cssText = [
+      'position:fixed',
+      'top:0',
+      'left:0',
+      'right:0',
+      'z-index:2147483647',
+      'height:56px',
+      'display:flex',
+      'align-items:center',
+      'gap:16px',
+      'padding:0 18px',
+      'box-sizing:border-box',
+      'background:#2f1f46',
+      'color:#ffffff',
+      'font:14px Arial, sans-serif',
+      'box-shadow:0 2px 10px rgba(0,0,0,0.18)'
+    ].join(';');
+
+    const text = document.createElement('span');
+    text.textContent = '"Salesforce Reflect" started recording this browser';
+    text.style.cssText = 'font-weight:600';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Cancel';
+    button.style.cssText = [
+      'border:0',
+      'border-radius:18px',
+      'padding:9px 18px',
+      'background:#c7c2ff',
+      'color:#170f29',
+      'font:600 13px Arial, sans-serif',
+      'cursor:pointer'
+    ].join(';');
+    button.addEventListener('click', () => bar.remove());
+
+    bar.appendChild(text);
+    bar.appendChild(button);
+    document.documentElement.appendChild(bar);
+  }).catch(() => {});
+}
 
 test('record from selected step', async ({ page }) => {
 ${body}});
@@ -52,24 +106,19 @@ export default async function handler(req, res) {
   const rootDir = process.cwd();
   const playwrightCli = path.join(rootDir, 'node_modules', '@playwright', 'test', 'cli.js');
   const hasStepTarget = Number.isInteger(throughStepIndex);
+  const tmpSpec = path.join(os.tmpdir(), `sfqa-record-${test.id}-${Date.now()}.spec.js`);
+  fs.writeFileSync(tmpSpec, buildPrepSpec(test, throughStepIndex), 'utf-8');
 
-  let args;
-  let env = process.env;
-  if (hasStepTarget) {
-    const tmpSpec = path.join(os.tmpdir(), `sfqa-record-${test.id}-${Date.now()}.spec.js`);
-    fs.writeFileSync(tmpSpec, buildPrepSpec(test, throughStepIndex), 'utf-8');
-    args = [playwrightCli, 'test', tmpSpec, '--headed', '--debug', '--reporter=line'];
-    env = { ...process.env, PWDEBUG: '1' };
-  } else {
-    args = [playwrightCli, 'codegen', test.url || 'about:blank'];
-  }
-
-  const child = spawn(process.execPath, args, {
-    cwd: rootDir,
-    detached: true,
-    stdio: 'ignore',
-    env,
-  });
+  const child = spawn(
+    process.execPath,
+    [playwrightCli, 'test', tmpSpec, '--headed', '--debug', '--reporter=line'],
+    {
+      cwd: rootDir,
+      detached: true,
+      stdio: 'ignore',
+      env: { ...process.env, PWDEBUG: '1' },
+    }
+  );
   child.unref();
 
   return res.status(200).json({
