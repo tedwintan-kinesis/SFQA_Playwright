@@ -100,5 +100,26 @@
         "value": "https://www.reddit.com/"
       }
     ]
+  },
+  {
+    "id": "test-82744b3e",
+    "name": "test run from playwright recorder",
+    "url": "https://qa3-kms.kinesis.money/home",
+    "zephyrId": "",
+    "suite": "All Tests",
+    "specFile": "tests/test-run-from-playwright-recorder.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-22T10:57:02.016Z",
+    "steps": [
+      {
+        "id": "step-1782125820207",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://qa3-kms.kinesis.money/home"
+      }
+    ]
   }
 ]
