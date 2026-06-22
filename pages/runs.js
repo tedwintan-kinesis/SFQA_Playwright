@@ -77,7 +77,7 @@ export default function RunsPage() {
     fetch('/api/runs')
       .then(res => res.json())
       .then(runsData => {
-        setRuns(runsData || []);
+        setRuns(Array.isArray(runsData) ? runsData : []);
         setLoading(false);
       })
       .catch(err => {

@@ -9,7 +9,7 @@ export default function ReportsPage() {
     fetch('/api/runs')
       .then(res => res.json())
       .then(data => {
-        setRuns(data || []);
+        setRuns(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {

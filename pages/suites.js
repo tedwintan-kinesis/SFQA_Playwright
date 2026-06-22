@@ -17,8 +17,8 @@ export default function SuitesPage() {
       fetch('/api/suites').then(r => r.json()),
       fetch('/api/tests').then(r => r.json())
     ]).then(([suitesData, testsData]) => {
-      setSuites(suitesData || []);
-      setTests(testsData || []);
+      setSuites(Array.isArray(suitesData) ? suitesData : []);
+      setTests(Array.isArray(testsData) ? testsData : []);
       setLoading(false);
     }).catch(e => {
       console.error(e);
@@ -86,7 +86,7 @@ export default function SuitesPage() {
       }
       const data = await res.json();
       setSuites(prev => prev.map(s => s.id === data.suite.id ? data.suite : s));
-      setTests(data.tests || []);
+      setTests(Array.isArray(data.tests) ? data.tests : []);
       setShowModal(false);
       setEditSuite(null);
       setSelectedTestIds([]);

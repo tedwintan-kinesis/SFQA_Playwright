@@ -15,7 +15,7 @@ export default function GlobalsPage() {
     fetch('/api/variables')
       .then(res => res.json())
       .then(data => {
-        setVars(data || []);
+        setVars(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {

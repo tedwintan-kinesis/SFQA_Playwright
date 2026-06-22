@@ -256,7 +256,7 @@ export default function TestsPage() {
 
       const testsRes = await fetch('/api/tests');
       const updatedTests = await testsRes.json();
-      setTests(updatedTests);
+      setTests(Array.isArray(updatedTests) ? updatedTests : []);
 
       const finishedTest = updatedTests.find(t => t.id === test.id);
       if (finishedTest) {
@@ -298,8 +298,8 @@ export default function TestsPage() {
       fetch('/api/tests').then(res => res.json()),
       fetch('/api/suites').then(res => res.json())
     ]).then(([testsData, suitesData]) => {
-      setTests(testsData || []);
-      setSuites(suitesData || []);
+      setTests(Array.isArray(testsData) ? testsData : []);
+      setSuites(Array.isArray(suitesData) ? suitesData : []);
       setLoading(false);
     }).catch(err => {
       console.error(err);
