@@ -16,7 +16,7 @@ async function findElementWithFallback(page, selectors) {
   return page.locator(selectors[0] || 'body');
 }
 
-test('test run 4', async ({ page }) => {
+test('Test run 4', async ({ page }) => {
   await page.goto('https://www.google.com/');
 
   // Step 1: Navigate (manual)
