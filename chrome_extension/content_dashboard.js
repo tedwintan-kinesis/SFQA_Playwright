@@ -1,8 +1,5 @@
-// Inject flag to main page context
-const script = document.createElement('script');
-script.textContent = 'window.SFQA_EXTENSION_ACTIVE = true;';
-(document.head || document.documentElement).appendChild(script);
-script.remove();
+// Set CSP-safe attribute flag on document element
+document.documentElement.setAttribute('data-sfqa-extension-active', 'true');
 
 // Listen to messages from dashboard page
 window.addEventListener("message", (event) => {

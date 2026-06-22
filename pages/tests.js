@@ -184,7 +184,7 @@ export default function TestsPage() {
 
   const startRecord = async (test, throughStepIndex = null) => {
     if (!test) return;
-    if (typeof window !== 'undefined' && window.SFQA_EXTENSION_ACTIVE) {
+    if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-sfqa-extension-active')) {
       setSelectedTestForSteps(test);
       window.postMessage({
         source: "sfqa-dashboard",
