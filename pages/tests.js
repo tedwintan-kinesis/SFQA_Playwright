@@ -30,6 +30,7 @@ export default function TestsPage() {
   const [globalVars, setGlobalVars] = useState([]);
   const [savingSteps, setSavingSteps] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [running, setRunning] = useState(false);
 
   const normalizeSteps = (steps, url) => {
     const existing = Array.isArray(steps) ? steps : [];
@@ -213,6 +214,59 @@ export default function TestsPage() {
       alert('Error starting recorder.');
     } finally {
       setRecording(false);
+    }
+  };
+
+  const startRun = async (test) => {
+    if (!test) return;
+    setRunning(true);
+    try {
+      const res = await fetch('/api/trigger-run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testId: test.id, mode: 'local' }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to start run.');
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const parsed = JSON.parse(line.slice(6));
+              if (parsed.type === 'done') {
+                break;
+              }
+            } catch {}
+          }
+        }
+      }
+
+      const testsRes = await fetch('/api/tests');
+      const updatedTests = await testsRes.json();
+      setTests(updatedTests);
+
+      const finishedTest = updatedTests.find(t => t.id === test.id);
+      if (finishedTest) {
+        alert(`Run finished. Status: ${finishedTest.status?.toUpperCase()}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error executing test.');
+    } finally {
+      setRunning(false);
     }
   };
 
@@ -612,8 +666,8 @@ export default function TestsPage() {
                   <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={addStep}>
                     + Add Step
                   </button>
-                  <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={() => startRecord(selectedTestForSteps)} disabled={recording}>
-                    {recording ? 'Opening...' : 'Record'}
+                  <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={() => startRun(selectedTestForSteps)} disabled={running || recording}>
+                    {running ? 'Running...' : 'Run'}
                   </button>
                   <button className="btn btn-primary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={saveSteps} disabled={savingSteps}>
                     {savingSteps ? 'Saving...' : 'Save Steps'}
@@ -640,7 +694,7 @@ export default function TestsPage() {
                             <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
                               onClick={() => moveStepDown(idx)} disabled={idx === 0 || idx === localSteps.length - 1}>Down</button>
                             <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
-                              onClick={() => startRecord(selectedTestForSteps, idx)} disabled={recording}>Record from here</button>
+                              onClick={() => startRecord(selectedTestForSteps, idx)} disabled={recording || running}>Record from here</button>
                             <button type="button" className="btn btn-danger" style={{ padding: '2px 5px', fontSize: 9 }}
                               onClick={() => deleteStep(idx)} disabled={idx === 0}>Delete</button>
                           </div>
@@ -685,9 +739,9 @@ export default function TestsPage() {
                                     <input className="fallback-input" style={{ fontSize: 12, padding: '4px 8px' }}
                                       value={fb} onChange={e => updateStepFallback(idx, fIdx, e.target.value)}
                                       placeholder={
-                                        fIdx === 0 ? "Primary selector (required)"
-                                      : fIdx === 1 ? "Fallback selector (optional)"
-                                      : fIdx === 2 ? "Last-resort selector (optional)"
+                                        fIdx === 0 ? 'e.g. getByText("aaabbb")'
+                                      : fIdx === 1 ? 'e.g. #submit-btn'
+                                      : fIdx === 2 ? 'e.g. .btn-primary'
                                       : `Additional selector ${fIdx + 1} (optional)`
                                       }
                                     />

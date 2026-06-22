@@ -222,9 +222,9 @@ export default function GlobalsPage() {
                   onChange={e => setFallback(i, e.target.value)}
                   required={i === 0}
                   placeholder={
-                    i === 0 ? "Primary selector (required)"
-                  : i === 1 ? "Fallback selector (optional)"
-                  : i === 2 ? "Last-resort selector (optional)"
+                    i === 0 ? 'e.g. getByText("aaabbb")'
+                  : i === 1 ? 'e.g. #submit-btn'
+                  : i === 2 ? 'e.g. .btn-primary'
                   : `Additional selector ${i + 1} (optional)`
                   }
                 />
