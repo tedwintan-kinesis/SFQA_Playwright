@@ -70,26 +70,5 @@
         "value": "https://www.google.com/"
       }
     ]
-  },
-  {
-    "id": "test-a126d3bb",
-    "name": "test run 5",
-    "url": "https://www.google.com/",
-    "zephyrId": "",
-    "suite": "All Tests",
-    "specFile": "tests/test-run-5.spec.js",
-    "type": "Web (Desktop)",
-    "status": "idle",
-    "lastRun": null,
-    "created": "2026-06-22T02:41:21.107Z",
-    "steps": [
-      {
-        "id": "step-1782096080110",
-        "action": "Navigate",
-        "selectorType": "manual",
-        "fallbacks": [],
-        "value": "https://www.google.com/"
-      }
-    ]
   }
 ]
