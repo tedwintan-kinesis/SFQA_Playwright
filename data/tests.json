@@ -49,5 +49,26 @@
     "status": "idle",
     "lastRun": null,
     "created": "2026-06-21T15:36:06.448Z"
+  },
+  {
+    "id": "test-74852972",
+    "name": "Test run 4",
+    "url": "https://www.google.com/",
+    "zephyrId": "",
+    "suite": "All Tests",
+    "specFile": "tests/test-run-4.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-22T02:35:42.187Z",
+    "steps": [
+      {
+        "id": "step-1782095741258",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://www.google.com/"
+      }
+    ]
   }
 ]
