@@ -79,5 +79,26 @@
         "value": "https://www.google.com/"
       }
     ]
+  },
+  {
+    "id": "test-5129da89",
+    "name": "test 6",
+    "url": "https://www.reddit.com/",
+    "zephyrId": "",
+    "suite": "All Tests",
+    "specFile": "tests/test-6.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-22T08:06:44.333Z",
+    "steps": [
+      {
+        "id": "step-1782115602558",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://www.reddit.com/"
+      }
+    ]
   }
 ]
