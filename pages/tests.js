@@ -89,7 +89,7 @@ export default function TestsPage() {
   };
 
   const moveStepUp = (idx) => {
-    if (idx === 0) return;
+    if (idx <= 1) return;
     setLocalSteps(prev => {
       const copy = [...prev];
       const temp = copy[idx];
@@ -100,6 +100,7 @@ export default function TestsPage() {
   };
 
   const moveStepDown = (idx) => {
+    if (idx === 0) return;
     setLocalSteps(prev => {
       if (idx === prev.length - 1) return prev;
       const copy = [...prev];
@@ -183,6 +184,15 @@ export default function TestsPage() {
 
   const startRecord = async (test, throughStepIndex = null) => {
     if (!test) return;
+    if (typeof window !== 'undefined' && window.SFQA_EXTENSION_ACTIVE) {
+      setSelectedTestForSteps(test);
+      window.postMessage({
+        source: "sfqa-dashboard",
+        action: "START_RECORDING",
+        url: test.url
+      }, "*");
+      return;
+    }
     setRecording(true);
     try {
       const body = { testId: test.id };
@@ -205,6 +215,29 @@ export default function TestsPage() {
       setRecording(false);
     }
   };
+
+  useEffect(() => {
+    const handleExtensionMessage = (event) => {
+      if (event.source !== window) return;
+      if (event.data && event.data.source === "sfqa-extension") {
+        if (event.data.action === "STEP_RECORDED") {
+          const newStep = event.data.step;
+          setLocalSteps(prev => {
+            if (newStep.action === "Navigate") {
+              if (prev.length > 0 && prev[0].action === "Navigate") {
+                const updated = [...prev];
+                updated[0] = { ...updated[0], value: newStep.value };
+                return updated;
+              }
+            }
+            return [...prev, newStep];
+          });
+        }
+      }
+    };
+    window.addEventListener("message", handleExtensionMessage);
+    return () => window.removeEventListener("message", handleExtensionMessage);
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -603,9 +636,9 @@ export default function TestsPage() {
                           <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)' }}>Step {idx + 1}</span>
                           <div style={{ display: 'flex', gap: 4 }}>
                             <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
-                              onClick={() => moveStepUp(idx)} disabled={idx === 0}>Up</button>
+                              onClick={() => moveStepUp(idx)} disabled={idx <= 1}>Up</button>
                             <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
-                              onClick={() => moveStepDown(idx)} disabled={idx === localSteps.length - 1}>Down</button>
+                              onClick={() => moveStepDown(idx)} disabled={idx === 0 || idx === localSteps.length - 1}>Down</button>
                             <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
                               onClick={() => startRecord(selectedTestForSteps, idx)} disabled={recording}>Record from here</button>
                             <button type="button" className="btn btn-danger" style={{ padding: '2px 5px', fontSize: 9 }}

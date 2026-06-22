@@ -20,7 +20,7 @@ test('New KMS Signup to SF flow', async ({ page }) => {
   await page.goto('https://qa3-kms.kinesis.money/signup');
 
   // Step 1: Click (manual)
-  const el1 = await findElementWithFallback(page, [".button"]);
+  const el1 = await findElementWithFallback(page, ['button[type="submit"]']);
   await el1.click();
 
   // Step 2: Navigate (global)

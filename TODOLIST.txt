@@ -41,3 +41,4 @@ SUGGESTIONS & DETAILS
 ***TO CONTINUE***
 - IMPLEMENT DEDICATED LOGIN PAGE AFTER BASE FEATURES ARE SETTLED
 - Check if the backend files and frontend should be integrated or make this project fully frontend focused
+- check error when clicking record "Recording requires running the app locally.". ask easiest way to install extension

@@ -8,7 +8,7 @@
     "specFile": "tests/Salesforce Integration/new-kms-signup-to-sf-flow.spec.js",
     "type": "Web (Desktop)",
     "status": "passed",
-    "lastRun": "2026-06-20T15:26:42Z",
+    "lastRun": "2026-06-22T01:22:49.448Z",
     "created": "2026-06-20T15:18:44Z",
     "steps": [
       {
@@ -17,7 +17,7 @@
         "selectorType": "manual",
         "variableId": "var-001",
         "fallbacks": [
-          ".button",
+          "button[type=\"submit\"]",
           "",
           "",
           ""

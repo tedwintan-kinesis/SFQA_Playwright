@@ -1,5 +1,17 @@
 [
   {
+    "id": "run-2a012981",
+    "testId": "test-001",
+    "testName": "New KMS Signup to SF flow",
+    "zephyrId": "SFT-T74",
+    "zephyrCycle": "SFT-R79",
+    "status": "passed",
+    "mode": "local",
+    "duration": "8s",
+    "completedAt": "2026-06-22T01:22:51.759Z",
+    "triggeredBy": "dashboard"
+  },
+  {
     "id": "run-001",
     "testId": "test-001",
     "testName": "New KMS Signup to SF flow",
