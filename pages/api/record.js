@@ -1,4 +1,4 @@
-﻿import { spawn } from 'child_process';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -62,7 +62,7 @@ async function showRecordingIndicator(page) {
     ].join(';');
 
     const text = document.createElement('span');
-    text.textContent = '"Salesforce Reflect" started recording this browser';
+    text.textContent = '"SFQA Reflect" started recording this browser';
     text.style.cssText = 'font-weight:600';
 
     const button = document.createElement('button');

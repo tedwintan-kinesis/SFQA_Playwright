@@ -4,7 +4,8 @@ let recordingTabId = null;
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "START_RECORDING") {
     dashboardTabId = sender.tab.id;
-    chrome.tabs.create({ url: message.url }, (tab) => {
+    chrome.windows.create({ url: message.url, incognito: true }, (window) => {
+      const tab = window.tabs[0];
       recordingTabId = tab.id;
       // Send navigation step back as step 1
       chrome.tabs.sendMessage(dashboardTabId, {
@@ -24,6 +25,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         step: message.step
       });
     }
+  } else if (message.action === "CHECK_RECORDING") {
+    sendResponse({ isRecording: (sender.tab && sender.tab.id === recordingTabId) });
+    return true;
   }
 });
 
