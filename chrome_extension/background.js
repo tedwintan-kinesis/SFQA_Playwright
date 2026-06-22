@@ -71,17 +71,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "START_RECORDING") {
     dashboardTabId = sender.tab.id;
     chrome.windows.create({ url: message.url, incognito: true }, (win) => {
-      const tab = win.tabs[0];
-      recordingTabId = tab.id;
-      // Send navigation step back as step 1
-      chrome.tabs.sendMessage(dashboardTabId, {
-        action: "STEP_RECORDED",
-        step: {
-          action: "Navigate",
-          selectorType: "manual",
-          fallbacks: ["", "", ""],
-          value: message.url
-        }
+      chrome.tabs.query({ windowId: win.id }, (tabs) => {
+        if (!tabs || tabs.length === 0) return;
+        const tab = tabs[0];
+        recordingTabId = tab.id;
+        // Send navigation step back as step 1
+        chrome.tabs.sendMessage(dashboardTabId, {
+          action: "STEP_RECORDED",
+          step: {
+            action: "Navigate",
+            selectorType: "manual",
+            fallbacks: ["", "", ""],
+            value: message.url
+          }
+        });
       });
     });
   } else if (message.action === "RECORD_STEP") {
