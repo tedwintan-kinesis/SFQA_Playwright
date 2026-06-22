@@ -11,10 +11,10 @@ export default async function handler(req, res) {
 
       const test = tests[idx];
       const updatedData = { ...test, ...req.body };
-      
+
       const fileSlug = slugify(updatedData.name || 'test');
       const targetSuite = updatedData.suite || 'All Tests';
-      
+
       // Determine new spec path
       let newSpecFile = '';
       if (targetSuite === 'All Tests') {
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
         specFile: newSpecFile,
         id
       };
-      
+
       await writeTests(tests);
       return res.status(200).json(tests[idx]);
     } catch (e) {

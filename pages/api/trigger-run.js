@@ -58,9 +58,9 @@ export default async function handler(req, res) {
 
   let tests;
   try {
-    tests = readTests();
+    tests = await readTests();
   } catch (e) {
-    return res.status(500).json({ error: 'Cannot read tests.json' });
+    return res.status(500).json({ error: 'Cannot read tests from dataStore' });
   }
 
   const test = tests.find(t => t.id === testId);
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
     send(`[SFQA] Run finished: ${status.toUpperCase()} in ${duration}`, status === 'passed' ? 'success' : 'error');
 
     // Update test status
-    const testsNow = readTests();
+    const testsNow = await readTests();
     const testIdx = testsNow.findIndex(t => t.id === testId);
     if (testIdx !== -1) {
       testsNow[testIdx].status = status;
@@ -187,7 +187,7 @@ export default async function handler(req, res) {
     }
 
     // Save run record
-    const runs = readRuns();
+    const runs = await readRuns();
     runs.unshift({
       id: runId,
       testId: test.id,

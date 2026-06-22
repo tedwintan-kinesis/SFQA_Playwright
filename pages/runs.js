@@ -1,6 +1,74 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
+function ScreenshotsCell({ runId }) {
+  const [attachments, setAttachments] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchAttachments = () => {
+    setLoading(true);
+    fetch(`/api/runs/${runId}/attachments`)
+      .then(res => res.json())
+      .then(data => {
+        setAttachments(data || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setAttachments([]);
+        setLoading(false);
+      });
+  };
+
+  if (attachments === null) {
+    return (
+      <button 
+        onClick={fetchAttachments}
+        disabled={loading}
+        style={{
+          background: '#E2E8F0',
+          border: 'none',
+          borderRadius: 4,
+          padding: '4px 8px',
+          fontSize: 11.5,
+          fontWeight: 600,
+          color: '#4A5568',
+          cursor: 'pointer'
+        }}
+      >
+        {loading ? 'Loading...' : 'View'}
+      </button>
+    );
+  }
+
+  if (attachments.length === 0) {
+    return <span style={{ color: 'var(--muted)', fontSize: 12.5 }}>—</span>;
+  }
+
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {attachments.map((a, idx) => (
+        <a key={idx} href={a.url} target="_blank" rel="noreferrer" title={a.name}>
+          <img 
+            src={a.url} 
+            alt={a.name} 
+            style={{ 
+              width: 32, 
+              height: 20, 
+              objectFit: 'cover', 
+              borderRadius: 3, 
+              border: '1px solid #E2E8F0', 
+              cursor: 'pointer',
+              transition: 'transform 0.1s'
+            }} 
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'none'}
+          />
+        </a>
+      ))}
+    </div>
+  );
+}
+
 export default function RunsPage() {
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +121,7 @@ export default function RunsPage() {
                   <th>Mode</th>
                   <th>Status</th>
                   <th>Duration</th>
+                  <th>Screenshots</th>
                   <th>Completed</th>
                 </tr>
               </thead>
@@ -74,6 +143,9 @@ export default function RunsPage() {
                       {run.status?.toUpperCase()}
                     </td>
                     <td style={{ color: 'var(--muted)', fontSize: 12.5 }}>{run.duration || '—'}</td>
+                    <td>
+                      <ScreenshotsCell runId={run.id} />
+                    </td>
                     <td style={{ color: 'var(--muted)', fontSize: 12.5 }}>{fmtDate(run.completedAt)}</td>
                   </tr>
                 ))}

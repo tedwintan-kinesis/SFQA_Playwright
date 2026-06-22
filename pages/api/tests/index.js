@@ -16,10 +16,10 @@ export default async function handler(req, res) {
     try {
       const tests = readTests();
       const { name, url, zephyrId, suite } = req.body;
-      
+
       const fileSlug = slugify(name || 'test');
       const targetSuite = suite || 'All Tests';
-      
+
       // Determine spec file relative path
       let specFile = '';
       if (targetSuite === 'All Tests') {
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
       // Generate Playwright spec content
       const content = generateSpecContent(name, url, zephyrId, req.body.steps);
-      
+
       // Commit spec file to disk/GitHub
       await commitFile(finalSpecFile, content);
 
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         created: new Date().toISOString(),
         steps: req.body.steps || []
       };
-      
+
       tests.push(newTest);
       await writeTests(tests);
       return res.status(201).json(newTest);

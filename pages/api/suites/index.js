@@ -15,7 +15,7 @@ export default async function handler(req, res) {
       const suites = readSuites();
       const name = (req.body.name || '').trim();
       if (!name) return res.status(400).json({ error: 'Folder name is required' });
-      
+
       if (suites.some(s => s.name.toLowerCase() === name.toLowerCase()) || name.toLowerCase() === 'all tests') {
         return res.status(400).json({ error: 'A folder with this name already exists' });
       }
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
       const suites = readSuites();
       const targetSuite = suites.find(s => s.id === id);
       if (!targetSuite) return res.status(404).json({ error: 'Suite not found' });
-      
+
       const filtered = suites.filter(s => s.id !== id);
       await writeSuites(filtered);
 
@@ -117,19 +117,19 @@ export default async function handler(req, res) {
           const oldPath = t.specFile;
           const fileSlug = slugify(t.name);
           const newPath = `tests/${fileSlug}.spec.js`;
-          
+
           let content = await readFileContent(oldPath);
           if (!content) {
             content = generateSpecContent(t.name, t.url, t.zephyrId);
           }
-          
+
           await moveFile(oldPath, newPath, content);
           t.suite = 'All Tests';
           t.specFile = newPath;
           updated = true;
         }
       }
-      
+
       if (updated) {
         await writeTests(tests);
       }
