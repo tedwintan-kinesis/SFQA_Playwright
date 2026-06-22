@@ -62,7 +62,7 @@ async function showRecordingIndicator(page) {
     ].join(';');
 
     const text = document.createElement('span');
-    text.textContent = '"SFQA Reflect" started recording this browser';
+    text.textContent = '"SFQA Reflect" Automation Testing started debugging this browser';
     text.style.cssText = 'font-weight:600';
 
     const button = document.createElement('button');
@@ -79,8 +79,21 @@ async function showRecordingIndicator(page) {
     ].join(';');
     button.addEventListener('click', () => bar.remove());
 
+    const closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = [
+      'margin-left:auto',
+      'cursor:pointer',
+      'font-size:18px',
+      'opacity:0.85',
+      'user-select:none',
+      'padding:4px'
+    ].join(';');
+    closeBtn.addEventListener('click', () => bar.remove());
+
     bar.appendChild(text);
     bar.appendChild(button);
+    bar.appendChild(closeBtn);
     document.documentElement.appendChild(bar);
   }).catch(() => {});
 }
@@ -106,12 +119,29 @@ export default async function handler(req, res) {
   const rootDir = process.cwd();
   const playwrightCli = path.join(rootDir, 'node_modules', '@playwright', 'test', 'cli.js');
   const hasStepTarget = Number.isInteger(throughStepIndex);
+
   const tmpSpec = path.join(os.tmpdir(), `sfqa-record-${test.id}-${Date.now()}.spec.js`);
   fs.writeFileSync(tmpSpec, buildPrepSpec(test, throughStepIndex), 'utf-8');
 
+  // Temp playwright config with incognito launch args
+  const tmpConfig = path.join(os.tmpdir(), `sfqa-playwright-config-${Date.now()}.js`);
+  fs.writeFileSync(tmpConfig, `
+const { defineConfig, devices } = require('@playwright/test');
+module.exports = defineConfig({
+  testDir: '${tmpSpec.replace(/\\/g, '/')}',
+  use: {
+    headless: false,
+    launchOptions: {
+      args: ['--incognito'],
+    },
+  },
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+});
+`, 'utf-8');
+
   const child = spawn(
     process.execPath,
-    [playwrightCli, 'test', tmpSpec, '--headed', '--debug', '--reporter=line'],
+    [playwrightCli, 'test', tmpSpec, '--config', tmpConfig, '--headed', '--debug', '--reporter=line'],
     {
       cwd: rootDir,
       detached: true,

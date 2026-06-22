@@ -19,6 +19,9 @@ module.exports = defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 15000,
     navigationTimeout: 30000,
+    launchOptions: {
+      args: ['--incognito'],
+    },
   },
   projects: [
     {

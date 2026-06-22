@@ -110,7 +110,7 @@ function showRecordingIndicator() {
   ].join(';');
 
   const text = document.createElement('span');
-  text.textContent = '"SFQA Reflect" started recording this browser';
+  text.textContent = '"SFQA Reflect" Automation Testing started debugging this browser';
   text.style.cssText = 'font-weight:600';
 
   const button = document.createElement('button');
@@ -127,8 +127,21 @@ function showRecordingIndicator() {
   ].join(';');
   button.addEventListener('click', () => bar.remove());
 
+  const closeBtn = document.createElement('span');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = [
+    'margin-left:auto',
+    'cursor:pointer',
+    'font-size:18px',
+    'opacity:0.85',
+    'user-select:none',
+    'padding:4px'
+  ].join(';');
+  closeBtn.addEventListener('click', () => bar.remove());
+
   bar.appendChild(text);
   bar.appendChild(button);
+  bar.appendChild(closeBtn);
   
   // Make sure body or html element is ready
   if (document.body) {
