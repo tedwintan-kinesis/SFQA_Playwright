@@ -1,44 +1,5 @@
 [
   {
-    "id": "test-001",
-    "name": "New KMS Signup to SF flow",
-    "url": "https://qa3-kms.kinesis.money/signup",
-    "zephyrId": "SFT-T74",
-    "suite": "Salesforce Integration",
-    "specFile": "tests/Salesforce Integration/new-kms-signup-to-sf-flow.spec.js",
-    "type": "Web (Desktop)",
-    "status": "passed",
-    "lastRun": "2026-06-22T01:22:49.448Z",
-    "created": "2026-06-20T15:18:44Z",
-    "steps": [
-      {
-        "id": "step-1782057541860",
-        "action": "Click",
-        "selectorType": "manual",
-        "variableId": "var-001",
-        "fallbacks": [
-          "button[type=\"submit\"]",
-          "",
-          "",
-          ""
-        ],
-        "value": ""
-      },
-      {
-        "id": "step-1782057560013",
-        "action": "Navigate",
-        "selectorType": "global",
-        "variableId": "var-001",
-        "fallbacks": [
-          "",
-          "",
-          ""
-        ],
-        "value": "https://google.com"
-      }
-    ]
-  },
-  {
     "id": "test-74852972",
     "name": "Test run 4",
     "url": "https://www.google.com/",
@@ -46,8 +7,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-run-4.spec.js",
     "type": "Web (Desktop)",
-    "status": "idle",
-    "lastRun": null,
+    "status": "failed",
+    "lastRun": "2026-06-23T09:39:01.052Z",
     "created": "2026-06-22T02:35:42.187Z",
     "steps": [
       {
@@ -55,7 +16,29 @@
         "action": "Navigate",
         "selectorType": "manual",
         "fallbacks": [],
-        "value": "https://www.google.com/"
+        "value": "https://www.merriam-webster.com/dictionary/test"
+      },
+      {
+        "id": "step-1782207487821",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#APjFqb",
+          "textarea[name=\"q\"]",
+          "[aria-label=\"Search\"]"
+        ],
+        "value": "test"
+      },
+      {
+        "id": "step-1782207511335",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "a.zReHs",
+          ".zReHs",
+          "div#rso > div:nth-of-type(6) > div > div > div > div > div > div > span > a"
+        ],
+        "value": ""
       }
     ]
   },
@@ -119,6 +102,48 @@
         "selectorType": "manual",
         "fallbacks": [],
         "value": "https://qa3-kms.kinesis.money/home"
+      }
+    ]
+  },
+  {
+    "id": "SFT-T500",
+    "name": "Test Run 7",
+    "url": "https://qa3-kms.kinesis.money/login",
+    "zephyrId": "SFT-T500",
+    "suite": "All Tests",
+    "specFile": "tests/test-run-7.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-23T09:17:39.080Z",
+    "steps": [
+      {
+        "id": "step-1782206259056",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://qa3-kms.kinesis.money/login"
+      }
+    ]
+  },
+  {
+    "id": "SFT-T501",
+    "name": "Test Run 1",
+    "url": "https://qa3-kms.kinesis.money/login",
+    "zephyrId": "SFT-T501",
+    "suite": "All Tests",
+    "specFile": "tests/test-run-1.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-23T09:28:27.037Z",
+    "steps": [
+      {
+        "id": "step-1782206907012",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://qa3-kms.kinesis.money/login"
       }
     ]
   }

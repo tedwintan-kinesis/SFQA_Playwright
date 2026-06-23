@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'PUT') {
     try {
-      const tests = readTests();
+      const tests = await readTests();
       const idx = tests.findIndex(t => t.id === id);
       if (idx === -1) return res.status(404).json({ error: 'Test not found' });
 
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'DELETE') {
     try {
-      const tests = readTests();
+      const tests = await readTests();
       const test = tests.find(t => t.id === id);
       if (!test) return res.status(404).json({ error: 'Test not found' });
 

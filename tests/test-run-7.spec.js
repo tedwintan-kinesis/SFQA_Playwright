@@ -1,5 +1,5 @@
 // @zephyrId -
-// @startUrl https://www.google.com/
+// @startUrl https://qa3-kms.kinesis.money/login
 
 const { test, expect } = require('@playwright/test');
 
@@ -79,20 +79,12 @@ async function findElementWithFallback(page, selectors) {
   return page.locator(selectors[0] || 'body');
 }
 
-test('Test run 4', async ({ page }) => {
-  await page.goto('https://www.google.com/');
+test('Test Run 7', async ({ page }) => {
+  await page.goto('https://qa3-kms.kinesis.money/login');
   await showAutomationIndicator(page);
 
   // Step 1: Navigate (manual)
-  await page.goto('https://www.merriam-webster.com/dictionary/test');
+  await page.goto('https://qa3-kms.kinesis.money/login');
   await showAutomationIndicator(page);
-
-  // Step 2: Type (manual)
-  const el2 = await findElementWithFallback(page, ["#APjFqb","textarea[name=\"q\"]","[aria-label=\"Search\"]"]);
-  await el2.fill('test');
-
-  // Step 3: Click (manual)
-  const el3 = await findElementWithFallback(page, ["a.zReHs",".zReHs","div#rso > div:nth-of-type(6) > div > div > div > div > div > div > span > a"]);
-  await el3.click();
 
 });

@@ -113,7 +113,8 @@ export default async function handler(req, res) {
   }
 
   const { testId, throughStepIndex } = req.body;
-  const test = readTests().find(t => t.id === testId);
+  const tests = await readTests();
+  const test = tests.find(t => t.id === testId);
   if (!test) return res.status(404).json({ error: 'Test not found' });
 
   const rootDir = process.cwd();
