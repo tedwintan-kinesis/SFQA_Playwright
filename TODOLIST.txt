@@ -40,5 +40,24 @@ SUGGESTIONS & DETAILS
 
 ***TO CONTINUE***
 - IMPLEMENT DEDICATED LOGIN PAGE AFTER BASE FEATURES ARE SETTLED
-- Check if the backend files and frontend should be integrated or make this project fully frontend focused
-- check error when clicking record "Recording requires running the app locally.". ask easiest way to install extension
+
+-implement this method similar to how Smartbear Reflect works
+SmartBear Reflect and Zephyr Scale integration flow:
+
+Mapping
+
+Link Reflect test case to Zephyr Scale Test Case Key (e.g. SFT-T74) in Reflect test settings.
+Execution
+
+Test run triggered (via CI/CD, scheduler, or Reflect UI).
+Reflect executes no-code tests in its cloud browsers.
+Reporting
+
+Upon completion, Reflect calls Zephyr API: POST https://api.zephyrscale.smartbear.com/v2/testexecutions
+Reports status (Pass/Fail), run duration, and logs.
+Evidence
+
+Reflect uploads test video links, screenshots, and logs directly as attachments to corresponding Zephyr execution records in Jira.
+
+[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "https://gpt4.mirbuds.com/claudecode", "User")
+[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "sk-ant-oat01-3iPljS9lCayyM69wUN6p383YkjjXwYhV", "User")

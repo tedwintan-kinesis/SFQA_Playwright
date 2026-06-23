@@ -5,7 +5,7 @@ import path from 'path';
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      const tests = readTests();
+      const tests = await readTests();
       return res.status(200).json(tests);
     } catch (e) {
       return res.status(500).json({ error: e.message });
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const tests = readTests();
+      const tests = await readTests();
       const { name, url, zephyrId, suite } = req.body;
 
       const fileSlug = slugify(name || 'test');

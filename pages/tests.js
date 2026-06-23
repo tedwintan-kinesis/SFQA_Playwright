@@ -357,6 +357,11 @@ export default function TestsPage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...form, steps: initialSteps }),
         });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || 'Failed to create test case.');
+          return;
+        }
         const created = await res.json();
         setTests(prev => [...prev, created]);
         setSelectedTestForSteps(created);
