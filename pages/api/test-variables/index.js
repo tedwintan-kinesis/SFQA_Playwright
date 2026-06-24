@@ -1,10 +1,10 @@
-import { readVariables, writeVariables } from '../../../lib/dataStore';
+import { readTestVariables, writeTestVariables } from '../../../lib/dataStore';
 import { v4 as uuid } from 'uuid';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      const vars = await readVariables();
+      const vars = await readTestVariables();
       return res.status(200).json(vars);
     } catch (e) {
       return res.status(500).json({ error: e.message });
@@ -13,15 +13,15 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const vars = await readVariables();
+      const vars = await readTestVariables();
       const newVar = {
-        id: `var-${uuid().split('-')[0]}`,
+        id: `tvar-${uuid().split('-')[0]}`,
         key: req.body.key,
+        value: req.body.value || '',
         desc: req.body.desc || '',
-        fallbacks: req.body.fallbacks || [],
       };
       vars.push(newVar);
-      await writeVariables(vars);
+      await writeTestVariables(vars);
       return res.status(201).json(newVar);
     } catch (e) {
       return res.status(500).json({ error: e.message });
@@ -31,11 +31,11 @@ export default async function handler(req, res) {
   if (req.method === 'PUT') {
     try {
       const { id } = req.query;
-      const vars = await readVariables();
+      const vars = await readTestVariables();
       const idx = vars.findIndex(v => v.id === id);
-      if (idx === -1) return res.status(404).json({ error: 'Variable not found' });
+      if (idx === -1) return res.status(404).json({ error: 'Test Variable not found' });
       vars[idx] = { ...vars[idx], ...req.body, id };
-      await writeVariables(vars);
+      await writeTestVariables(vars);
       return res.status(200).json(vars[idx]);
     } catch (e) {
       return res.status(500).json({ error: e.message });
@@ -45,9 +45,9 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     try {
       const { id } = req.query;
-      const vars = await readVariables();
+      const vars = await readTestVariables();
       const filtered = vars.filter(v => v.id !== id);
-      await writeVariables(filtered);
+      await writeTestVariables(filtered);
       return res.status(200).json({ success: true });
     } catch (e) {
       return res.status(500).json({ error: e.message });

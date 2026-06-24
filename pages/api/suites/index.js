@@ -4,7 +4,8 @@ import { v4 as uuid } from 'uuid';
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      return res.status(200).json(readSuites());
+      const suites = await readSuites();
+      return res.status(200).json(suites);
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
@@ -12,7 +13,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const suites = readSuites();
+      const suites = await readSuites();
       const name = (req.body.name || '').trim();
       if (!name) return res.status(400).json({ error: 'Folder name is required' });
 
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
   if (req.method === 'PUT') {
     try {
       const { id } = req.query;
-      const suites = readSuites();
+      const suites = await readSuites();
       const idx = suites.findIndex(s => s.id === id);
       if (idx === -1) return res.status(404).json({ error: 'Suite not found' });
 
@@ -60,7 +61,7 @@ export default async function handler(req, res) {
       await commitFile(`tests/${name}/.gitkeep`, '');
 
       const selectedTestIds = Array.isArray(req.body.testIds) ? req.body.testIds : [];
-      const tests = readTests();
+      const tests = await readTests();
       const usedPaths = new Set(tests.map(t => t.specFile).filter(Boolean));
       let testsChanged = false;
 
@@ -102,7 +103,7 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     try {
       const { id } = req.query;
-      const suites = readSuites();
+      const suites = await readSuites();
       const targetSuite = suites.find(s => s.id === id);
       if (!targetSuite) return res.status(404).json({ error: 'Suite not found' });
 
@@ -110,7 +111,7 @@ export default async function handler(req, res) {
       await writeSuites(filtered);
 
       // Reassign and physically move tests in that suite to root tests/ folder
-      const tests = readTests();
+      const tests = await readTests();
       let updated = false;
       for (const t of tests) {
         if (t.suite === targetSuite.name) {

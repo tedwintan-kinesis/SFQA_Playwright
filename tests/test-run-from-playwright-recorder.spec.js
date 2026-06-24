@@ -108,7 +108,7 @@ test('test run from playwright recorder', async ({ page }) => {
 
   // Step 6: Javascript (manual)
   await page.evaluate(async () => {
-        const secret = "FEYTMWZDOBJD6VRUEVOS6ZRDMJUEOZLMKJRUESR6KRCU6RDXGF4A";
+    const secret = "FEYTMWZDOBJD6VRUEVOS6ZRDMJUEOZLMKJRUESR6KRCU6RDXGF4A";
     
         // 1. Base32 Decoding logic
         const decoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -152,34 +152,8 @@ test('test run from playwright recorder', async ({ page }) => {
         // 4. Generate the final 6-digit code
         const otp = (binary % 1000000).toString().padStart(6, "0");
     
-        // 5. Distribute the 6 digits and force the web app to recognize them
-        for (let i = 0; i < 6; i++) {
-            const box = document.querySelector(`[data-cy="2fa-input-${i}"] input`);
-            if (box) {
-                box.focus();
-    
-                // Clear React's internal value tracker so it registers the change
-                if (box._valueTracker) {
-                    box._valueTracker.setValue('');
-                }
-    
-                const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-                setter.call(box, otp[i]);
-    
-                box.dispatchEvent(new Event('input', { bubbles: true }));
-                box.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        }
-    
-        // 6. Force auto-submit fallback if the website misses the events
-        const mfaForm = document.querySelector('[data-cy="qrcode-mfa-form-input"]')?.closest('form');
-        if (mfaForm) {
-            if (typeof mfaForm.requestSubmit === 'function') {
-                mfaForm.requestSubmit();
-            } else {
-                mfaForm.submit();
-            }
-        }
+        // 5. Return the result
+        return otp;
   });
 
 });

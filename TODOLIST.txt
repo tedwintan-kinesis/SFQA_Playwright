@@ -61,3 +61,5 @@ Reflect uploads test video links, screenshots, and logs directly as attachments 
 
 [Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "https://gpt4.mirbuds.com/claudecode", "User")
 [Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "sk-ant-oat01-3iPljS9lCayyM69wUN6p383YkjjXwYhV", "User")
+
+1. Peiridically make backups for Zephyr Test cases and Test resulst either to Github or local folder (Zephyr_Backup)

@@ -4,11 +4,21 @@ import Modal from '../components/Modal';
 
 export default function GlobalsPage() {
   const [vars, setVars] = useState([]);
+  const [testVars, setTestVars] = useState([]);
+  const [activeTab, setActiveTab] = useState('elements');
   const [loading, setLoading] = useState(true);
+
+  // Modals
   const [showModal, setShowModal] = useState(false);
   const [editVar, setEditVar] = useState(null);
   const [form, setForm] = useState({ key: '', desc: '', fallbacks: ['', '', ''] });
   const [saving, setSaving] = useState(false);
+
+  const [showTestVarModal, setShowTestVarModal] = useState(false);
+  const [editTestVar, setEditTestVar] = useState(null);
+  const [testVarForm, setTestVarForm] = useState({ key: '', value: '', desc: '' });
+  const [testVarSaving, setTestVarSaving] = useState(false);
+
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -16,6 +26,13 @@ export default function GlobalsPage() {
       .then(res => res.json())
       .then(data => {
         setVars(Array.isArray(data) ? data : []);
+      })
+      .catch(err => console.error(err));
+
+    fetch('/api/test-variables')
+      .then(res => res.json())
+      .then(data => {
+        setTestVars(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
@@ -34,6 +51,11 @@ export default function GlobalsPage() {
   }
 
   const filtered = vars.filter(v =>
+    v.key.toLowerCase().includes(search.toLowerCase()) ||
+    (v.desc || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredTestVars = testVars.filter(v =>
     v.key.toLowerCase().includes(search.toLowerCase()) ||
     (v.desc || '').toLowerCase().includes(search.toLowerCase())
   );
@@ -106,6 +128,55 @@ export default function GlobalsPage() {
     setVars(prev => prev.filter(v => v.id !== id));
   }
 
+  // TEST VARIABLES HANDLERS
+  function openTestVarCreate() {
+    setEditTestVar(null);
+    setTestVarForm({ key: '', value: '', desc: '' });
+    setShowTestVarModal(true);
+  }
+
+  function openTestVarEdit(v) {
+    setEditTestVar(v);
+    setTestVarForm({ key: v.key, value: v.value || '', desc: v.desc || '' });
+    setShowTestVarModal(true);
+  }
+
+  async function handleTestVarSave(e) {
+    e.preventDefault();
+    setTestVarSaving(true);
+    const payload = {
+      key: testVarForm.key,
+      value: testVarForm.value,
+      desc: testVarForm.desc,
+    };
+    try {
+      if (editTestVar) {
+        const res = await fetch(`/api/test-variables?id=${editTestVar.id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const updated = await res.json();
+        setTestVars(prev => prev.map(v => v.id === editTestVar.id ? updated : v));
+      } else {
+        const res = await fetch('/api/test-variables', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const created = await res.json();
+        setTestVars(prev => [...prev, created]);
+      }
+      setShowTestVarModal(false);
+    } finally {
+      setTestVarSaving(false);
+    }
+  }
+
+  async function handleTestVarDelete(id) {
+    if (!confirm('Delete this test variable?')) return;
+    await fetch(`/api/test-variables?id=${id}`, { method: 'DELETE' });
+    setTestVars(prev => prev.filter(v => v.id !== id));
+  }
+
   return (
     <>
       <Head><title>Globals — Salesforce Reflect</title></Head>
@@ -114,7 +185,12 @@ export default function GlobalsPage() {
         <div className="split-sidebar">
           <div className="section-hdr" style={{ marginBottom: 8 }}>Globals</div>
           <ul className="folder-list">
-            <li className="folder-item active">Element Masterlist <span className="badge">{vars.length}</span></li>
+            <li className={`folder-item ${activeTab === 'elements' ? 'active' : ''}`} onClick={() => setActiveTab('elements')} style={{cursor: 'pointer'}}>
+              Element Masterlist <span className="badge">{vars.length}</span>
+            </li>
+            <li className={`folder-item ${activeTab === 'variables' ? 'active' : ''}`} onClick={() => setActiveTab('variables')} style={{cursor: 'pointer'}}>
+              Variables <span className="badge">{testVars.length}</span>
+            </li>
           </ul>
 
           <div style={{ marginTop: 'auto', fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, paddingTop: 20 }}>
@@ -124,64 +200,124 @@ export default function GlobalsPage() {
         </div>
 
         <div className="split-content">
-          <div>
-            <div className="control-bar">
+          {activeTab === 'elements' ? (
+            <>
               <div>
-                <h2>Variables</h2>
-                <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>
-                  Element locators with fallback strategies — P1 tried first, falls back to P2, then P3.
-                </p>
+                <div className="control-bar">
+                  <div>
+                    <h2>Element Locators</h2>
+                    <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>
+                      Element locators with fallback strategies — P1 tried first, falls back to P2, then P3.
+                    </p>
+                  </div>
+                  <button className="btn btn-primary" onClick={openCreate}>+ Add Element</button>
+                </div>
               </div>
-              <button className="btn btn-primary" onClick={openCreate}>+ Add Variable</button>
-            </div>
-          </div>
 
-          <input className="search-input" placeholder="Search variables…"
-            value={search} onChange={e => setSearch(e.target.value)}
-            style={{ maxWidth: '100%' }}/>
+              <input className="search-input" placeholder="Search locators…"
+                value={search} onChange={e => setSearch(e.target.value)} />
 
-          {filtered.length === 0 ? (
-            <div className="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-              <h4>No Variables Yet</h4>
-              <p>Add element locators with multiple fallbacks to keep tests stable.</p>
-            </div>
+              {filtered.length === 0 ? (
+                <div className="empty-state">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                  <h4>No Elements Yet</h4>
+                  <p>Add element locators with multiple fallbacks to keep tests stable.</p>
+                </div>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Description</th>
+                      <th>P1 (Primary)</th>
+                      <th>P2 (Fallback)</th>
+                      <th>P3 (Fallback)</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(v => (
+                      <tr key={v.id}>
+                        <td><strong style={{ fontFamily: 'monospace', fontSize: 13 }}>{v.key}</strong></td>
+                        <td style={{ color: 'var(--muted)', fontSize: 12.5, maxWidth: 180 }}>{v.desc || '—'}</td>
+                        <td><code>{v.fallbacks?.[0] || '—'}</code></td>
+                        <td><code>{v.fallbacks?.[1] || '—'}</code></td>
+                        <td><code>{v.fallbacks?.[2] || '—'}</code></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}
+                              onClick={() => openEdit(v)}>Edit</button>
+                            <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
+                              onClick={() => handleDelete(v.id)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Key</th>
-                  <th>Description</th>
-                  <th>P1 (Primary)</th>
-                  <th>P2 (Fallback)</th>
-                  <th>P3 (Fallback)</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(v => (
-                  <tr key={v.id}>
-                    <td><strong style={{ fontFamily: 'monospace', fontSize: 13 }}>{v.key}</strong></td>
-                    <td style={{ color: 'var(--muted)', fontSize: 12.5, maxWidth: 180 }}>{v.desc || '—'}</td>
-                    <td><code>{v.fallbacks?.[0] || '—'}</code></td>
-                    <td><code>{v.fallbacks?.[1] || '—'}</code></td>
-                    <td><code>{v.fallbacks?.[2] || '—'}</code></td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}
-                          onClick={() => openEdit(v)}>Edit</button>
-                        <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
-                          onClick={() => handleDelete(v.id)}>Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+              <div>
+                <div className="control-bar">
+                  <div>
+                    <h2>Test Variables</h2>
+                    <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>
+                      Store test data, expected text values, URLs, or environment-agnostic config options here.
+                    </p>
+                  </div>
+                  <button className="btn btn-primary" onClick={openTestVarCreate}>+ Add Variable</button>
+                </div>
+              </div>
+
+              <input className="search-input" placeholder="Search variables…"
+                value={search} onChange={e => setSearch(e.target.value)} />
+
+              {filteredTestVars.length === 0 ? (
+                <div className="empty-state" style={{ marginTop: 24 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                  <h4>No Test Variables Yet</h4>
+                  <p>Add environment variables or data meant to be shared across tests.</p>
+                </div>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Value</th>
+                      <th>Description</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTestVars.map(v => (
+                      <tr key={v.id}>
+                        <td><strong style={{ fontFamily: 'monospace', fontSize: 13 }}>{v.key}</strong></td>
+                        <td><code>{v.value || '—'}</code></td>
+                        <td style={{ color: 'var(--muted)', fontSize: 12.5, maxWidth: 180 }}>{v.desc || '—'}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}
+                              onClick={() => openTestVarEdit(v)}>Edit</button>
+                            <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }}
+                              onClick={() => handleTestVarDelete(v.id)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -234,6 +370,35 @@ export default function GlobalsPage() {
               onClick={addFallbackField}>
               + Add Selector
             </button>
+          </div>
+        </form>
+      </Modal>
+      <Modal open={showTestVarModal} onClose={() => setShowTestVarModal(false)}
+        title={editTestVar ? 'Edit Test Variable' : 'Add Test Variable'}
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setShowTestVarModal(false)}>Cancel</button>
+            <button className="btn btn-primary" form="test-var-form" type="submit" disabled={testVarSaving}>
+              {testVarSaving ? 'Saving…' : editTestVar ? 'Save Changes' : 'Add Variable'}
+            </button>
+          </>
+        }
+      >
+        <form id="test-var-form" onSubmit={handleTestVarSave}>
+          <div className="form-group">
+            <label>Variable Key *</label>
+            <input required value={testVarForm.key} onChange={e => setTestVarForm(f => ({...f, key: e.target.value}))}
+              placeholder="e.g., TEST_USER_EMAIL"/>
+          </div>
+          <div className="form-group">
+            <label>Value</label>
+            <input value={testVarForm.value} onChange={e => setTestVarForm(f => ({...f, value: e.target.value}))}
+              placeholder="e.g., qa@example.com"/>
+          </div>
+          <div className="form-group">
+            <label>Description</label>
+            <input value={testVarForm.desc} onChange={e => setTestVarForm(f => ({...f, desc: e.target.value}))}
+              placeholder="What is this used for?"/>
           </div>
         </form>
       </Modal>
