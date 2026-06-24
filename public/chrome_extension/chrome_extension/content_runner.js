@@ -55,16 +55,17 @@ window.sfqaRunStep = async function(step) {
     return null;
   }
 
-  // Wait for element to appear
+  // Wait for element to appear (skip for Wait/Javascript)
   let target = null;
-  for (let i = 0; i < 30; i++) {
-    target = findElement(step.fallbacks);
-    if (target) break;
-    await sleep(200);
-  }
-
-  if (!target && step.action !== "Wait" && step.action !== "Javascript" && step.action !== "Execute JS") {
-    throw new Error(`Element not found: ${(step.fallbacks || []).join(', ')}`);
+  if (step.action !== "Wait" && step.action !== "Javascript" && step.action !== "Execute JS") {
+    for (let i = 0; i < 30; i++) {
+      target = findElement(step.fallbacks || []);
+      if (target) break;
+      await sleep(200);
+    }
+    if (!target) {
+      throw new Error(`Element not found: ${(step.fallbacks || []).join(', ')}`);
+    }
   }
 
   switch (step.action) {

@@ -40,8 +40,16 @@ export default async function handler(req, res) {
         counter++;
       }
 
+      const steps = req.body.steps && req.body.steps.length > 0 ? req.body.steps : [{
+        id: `step-${Date.now()}`,
+        action: 'Navigate',
+        value: url,
+        selectorType: 'manual',
+        fallbacks: []
+      }];
+
       // Generate Playwright spec content
-      const content = generateSpecContent(name, url, zephyrId, req.body.steps);
+      const content = generateSpecContent(name, url, zephyrId, steps);
 
       // Commit spec file to disk/GitHub
       await commitFile(finalSpecFile, content);
@@ -57,7 +65,8 @@ export default async function handler(req, res) {
         status: 'idle',
         lastRun: null,
         created: new Date().toISOString(),
-        steps: req.body.steps || []
+        steps: steps
+
       };
 
       tests.push(newTest);

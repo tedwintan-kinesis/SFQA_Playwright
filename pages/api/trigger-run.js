@@ -110,6 +110,12 @@ export default async function handler(req, res) {
     lines.forEach(line => send(line, 'error'));
   });
 
+  req.on('close', () => {
+    if (!child.killed) {
+      child.kill();
+    }
+  });
+
   child.on('close', async (code) => {
     const duration = `${Math.round((Date.now() - startTime) / 1000)}s`;
     const status = code === 0 ? 'passed' : 'failed';

@@ -1,0 +1,18 @@
+SFQA PLAYWRIGHT ARCHITECTURE
+
+1. HOW DATA FLOWS (ONE-WAY ONLY)
+[Dashboard UI (pages/tests.js)] ---> [Database (data/tests.json)] ---> [Code Generator (lib/dataStore.js)] ---> [Script (tests/*.spec.js)]
+* Rule: Dashboard creates script. Script does NOT create Dashboard. 
+
+2. MAIN FILES
+- pages/tests.js: The UI you see.
+- data/tests.json: The database saving your test steps.
+- lib/dataStore.js: The machine that translates JSON database into Playwright code.
+- pages/api/trigger-run.js: The runner that tells Playwright to execute the code.
+- public/chrome_extension: The spy that watches your clicks and sends them to the UI.
+
+3. HOW RUN WORKS
+1. You click "Run".
+2. Dashboard tells trigger-run.js to start.
+3. It spawns Playwright in background.
+4. Logs stream back to UI.

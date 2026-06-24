@@ -96,7 +96,7 @@
           "input.css-cpz9ua",
           ".css-cpz9ua"
         ],
-        "value": "2FA_Code"
+        "value": "{{2FA_Code}}"
       }
     ]
   },

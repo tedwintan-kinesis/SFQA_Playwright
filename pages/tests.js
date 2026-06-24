@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Modal from '../components/Modal';
 
@@ -12,6 +12,7 @@ export default function TestsPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [dragOverFolder, setDragOverFolder] = useState(null);
   const [draggedIds, setDraggedIds] = useState([]);
+  const abortControllerRef = useRef(null);
 
   // Test creation modal state
   const [showModal, setShowModal] = useState(false);
@@ -254,11 +255,13 @@ export default function TestsPage() {
     }
 
     setRunning(true);
+    abortControllerRef.current = new AbortController();
     try {
       const res = await fetch('/api/trigger-run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testId: test.id, mode: 'local' }),
+        signal: abortControllerRef.current.signal
       });
 
       if (!res.ok) {
@@ -297,10 +300,26 @@ export default function TestsPage() {
         alert(`Run finished. Status: ${finishedTest.status?.toUpperCase()}`);
       }
     } catch (err) {
-      console.error(err);
-      alert('Error executing test.');
+      if (err.name !== 'AbortError') {
+        console.error(err);
+        alert('Run failed to start or was disconnected.');
+      } else {
+        alert('Run stopped by user.');
+      }
     } finally {
       setRunning(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const stopRun = () => {
+    if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-sfqa-extension-active')) {
+      // Future extension stop support
+      setRunning(false);
+      return;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
   };
 
@@ -719,8 +738,13 @@ export default function TestsPage() {
                   <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={addStep}>
                     + Add Step
                   </button>
-                  <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={() => startRun(selectedTestForSteps)} disabled={running || recording}>
-                    {running ? 'Running...' : 'Run'}
+                  <button 
+                    className={running ? "btn btn-danger" : "btn btn-secondary"} 
+                    style={{ padding: '6px 10px', fontSize: 12, flex: 1, backgroundColor: running ? '#dc3545' : undefined, color: running ? 'white' : undefined }} 
+                    onClick={() => running ? stopRun() : startRun(selectedTestForSteps)} 
+                    disabled={recording}
+                  >
+                    {running ? 'Stop' : 'Run'}
                   </button>
                   <button className="btn btn-primary" style={{ padding: '6px 10px', fontSize: 12, flex: 1 }} onClick={saveSteps} disabled={savingSteps}>
                     {savingSteps ? 'Saving...' : 'Save Steps'}

@@ -17,8 +17,10 @@ function buildPrepSpec(test, throughStepIndex) {
   body += `  const { windowId } = await cdp.send('Browser.getWindowForTarget');\n`;
   body += `  const screen = await page.evaluate(() => ({ width: window.screen.availWidth, height: window.screen.availHeight }));\n`;
   body += `  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal', left: 0, top: 0, width: Math.floor(screen.width / 2), height: screen.height } });\n\n`;
-  body += `  await page.goto('${escapeString(test.url)}');\n`;
-  body += `  await showRecordingIndicator(page);\n`;
+  if (!steps || steps.length === 0 || steps[0].action !== 'Navigate') {
+    body += `  await page.goto('${escapeString(test.url)}');\n`;
+    body += `  await showRecordingIndicator(page);\n`;
+  }
 
   const processValue = (val) => {
     if (!val) return "''";
@@ -40,6 +42,8 @@ function buildPrepSpec(test, throughStepIndex) {
     } else if (step.action === 'Assert Visible') {
       const selector = (step.fallbacks || []).find(s => s && s.trim()) || 'body';
       body += `  await page.locator('${escapeString(selector)}').first().waitFor({ state: 'visible' });\n`;
+    } else if (step.action === 'Wait') {
+      body += `  await page.waitForTimeout(${parseInt(step.value, 10) || 1000});\n`;
     }
   });
 

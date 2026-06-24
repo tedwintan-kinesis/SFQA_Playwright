@@ -82,20 +82,17 @@ async function findElementWithFallback(page, selectors) {
 }
 
 test('test run from playwright recorder', async ({ page }) => {
-  // Maximize window via CDP
+  // Position window on left half via CDP
   const cdp = await page.context().newCDPSession(page);
   const { windowId } = await cdp.send('Browser.getWindowForTarget');
-  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'maximized' } });
+  const screen = await page.evaluate(() => ({ width: window.screen.availWidth, height: window.screen.availHeight }));
+  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal', left: 0, top: 0, width: Math.floor(screen.width / 2), height: screen.height } });
   await cdp.send('Page.enable');
   page.on('console', msg => console.log('[BROWSER]', msg.type(), msg.text()));
 
-  await page.goto('https://qa3-kms.kinesis.money/home');
-  await page.waitForLoadState('networkidle');
-  await showAutomationIndicator(page);
 
   // Step 1: Navigate (manual)
   await page.goto(`https://qa3-kms.kinesis.money/login`);
-  await page.waitForLoadState('networkidle');
   await showAutomationIndicator(page);
 
   // Step 2: Type (manual)
@@ -167,9 +164,8 @@ test('test run from playwright recorder', async ({ page }) => {
   const el7 = await findElementWithFallback(page, ["#_r_p_","input.css-cpz9ua",".css-cpz9ua"]);
   await el7.click();
 
-  // Step 8: Type (manual) - use keyboard.type for number input + variable
+  // Step 8: Type (manual)
   const el8 = await findElementWithFallback(page, ["#_r_p_","input.css-cpz9ua",".css-cpz9ua"]);
-  await el8.click();
-  await page.keyboard.type(process.env['2FA_Code'] || '');
+  await el8.fill(`${process.env['2FA_Code']}`);
 
 });
