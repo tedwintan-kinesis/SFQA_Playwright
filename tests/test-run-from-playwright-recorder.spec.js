@@ -84,7 +84,19 @@ test('test run from playwright recorder', async ({ page }) => {
   await showAutomationIndicator(page);
 
   // Step 1: Navigate (manual)
-  await page.goto('https://qa3-kms.kinesis.money/home');
+  await page.goto('https://qa3-kms.kinesis.money/login');
   await showAutomationIndicator(page);
+
+  // Step 2: Type (manual)
+  const el2 = await findElementWithFallback(page, ["#_r_l_","input[name=\"email\"]","input.css-lukafr"]);
+  await el2.fill('tedwin.tan+qa3_1@kinesis.money');
+
+  // Step 3: Type (manual)
+  const el3 = await findElementWithFallback(page, ["#_r_m_","input[name=\"password\"]","input.css-69tkhw"]);
+  await el3.fill('Ttd@11190');
+
+  // Step 4: Click (manual)
+  const el4 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
+  await el4.click();
 
 });
