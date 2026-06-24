@@ -50,6 +50,30 @@
           "[data-cy=\"continue-with-email\"]"
         ],
         "value": ""
+      },
+      {
+        "id": "step-1782279970237",
+        "action": "Wait",
+        "selectorType": "manual",
+        "variableId": "",
+        "fallbacks": [
+          "",
+          "",
+          ""
+        ],
+        "value": "5000"
+      },
+      {
+        "id": "step-1782278891839",
+        "action": "Javascript",
+        "selectorType": "manual",
+        "variableId": "",
+        "fallbacks": [
+          "",
+          "",
+          ""
+        ],
+        "value": "    const secret = \"FEYTMWZDOBJD6VRUEVOS6ZRDMJUEOZLMKJRUESR6KRCU6RDXGF4A\";\n\n    // 1. Base32 Decoding logic\n    const decoding = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\";\n    let hex = \"\";\n    for (let i = 0; i < secret.length; i++) {\n        const val = decoding.indexOf(secret.charAt(i).toUpperCase());\n        let bits = val.toString(2);\n        while (bits.length < 5) bits = \"0\" + bits;\n        hex += bits;\n    }\n    while (hex.length % 8 !== 0) hex += \"0\";\n    const bin = [];\n    for (let i = 0; i < hex.length; i += 8) {\n        bin.push(parseInt(hex.substr(i, 8), 2));\n    }\n\n    // 2. Math & Time window calculations\n    const epoch = Math.round(new Date().getTime() / 1000.0);\n    let time = Math.floor(epoch / 30);\n\n    const msg = new Uint8Array(8);\n    for (let i = 7; i >= 0; i--) {\n        msg[i] = time & 0xff;\n        time >>= 8;\n    }\n\n    // 3. Cryptography steps to build the security key\n    const key = new Uint8Array(bin);\n    const cryptoKey = await crypto.subtle.importKey(\n        \"raw\", key, { name: \"HMAC\", hash: \"SHA-1\" }, false, [\"sign\"]\n    );\n    const signature = await crypto.subtle.sign(\"HMAC\", cryptoKey, msg);\n    const hash = new Uint8Array(signature);\n\n    const offset = hash[hash.length - 1] & 0xf;\n    const binary = ((hash[offset] & 0x7f) << 24) |\n        ((hash[offset + 1] & 0xff) << 16) |\n        ((hash[offset + 2] & 0xff) << 8) |\n        (hash[offset + 3] & 0xff);\n\n    // 4. Generate the final 6-digit code\n    const otp = (binary % 1000000).toString().padStart(6, \"0\");\n\n    // 5. Distribute the 6 digits and force the web app to recognize them\n    for (let i = 0; i < 6; i++) {\n        const box = document.querySelector(`[data-cy=\"2fa-input-${i}\"] input`);\n        if (box) {\n            box.focus();\n\n            // Clear React's internal value tracker so it registers the change\n            if (box._valueTracker) {\n                box._valueTracker.setValue('');\n            }\n\n            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, \"value\").set;\n            setter.call(box, otp[i]);\n\n            box.dispatchEvent(new Event('input', { bubbles: true }));\n            box.dispatchEvent(new Event('change', { bubbles: true }));\n        }\n    }\n\n    // 6. Force auto-submit fallback if the website misses the events\n    const mfaForm = document.querySelector('[data-cy=\"qrcode-mfa-form-input\"]')?.closest('form');\n    if (mfaForm) {\n        if (typeof mfaForm.requestSubmit === 'function') {\n            mfaForm.requestSubmit();\n        } else {\n            mfaForm.submit();\n        }\n    }"
       }
     ]
   },

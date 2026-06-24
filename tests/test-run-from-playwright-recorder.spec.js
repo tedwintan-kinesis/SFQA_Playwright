@@ -67,24 +67,119 @@ async function showAutomationIndicator(page) {
 }
 
 async function findElementWithFallback(page, selectors) {
+  // Try each selector with a short wait
   for (const sel of selectors) {
     if (!sel) continue;
     try {
-      const locator = page.locator(sel);
-      if (await locator.count() > 0 && await locator.first().isVisible()) {
-        return locator.first();
-      }
+      const locator = page.locator(sel).first();
+      await locator.waitFor({ state: 'visible', timeout: 3000 });
+      return locator;
     } catch (e) {}
   }
-  return page.locator(selectors[0] || 'body');
+  // Last resort: use first stable (non-dynamic) selector
+  const stable = selectors.find(s => s && !s.startsWith('#_r_'));
+  return page.locator(stable || selectors[0] || 'body');
 }
 
 test('test run from playwright recorder', async ({ page }) => {
   await page.goto('https://qa3-kms.kinesis.money/home');
+  await page.waitForLoadState('networkidle');
   await showAutomationIndicator(page);
 
   // Step 1: Navigate (manual)
   await page.goto('https://qa3-kms.kinesis.money/login');
+  await page.waitForLoadState('networkidle');
   await showAutomationIndicator(page);
+
+  // Step 2: Type (manual)
+  const el2 = await findElementWithFallback(page, ["#_r_m_","input[name=\"email\"]","input.css-lukafr"]);
+  await el2.fill('tedwin.tan+qa3_1@kinesis.money');
+
+  // Step 3: Type (manual)
+  const el3 = await findElementWithFallback(page, ["#_r_n_","input[name=\"password\"]","input.css-69tkhw"]);
+  await el3.fill('Ttd@11190');
+
+  // Step 4: Click (manual)
+  const el4 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
+  await el4.click();
+
+  // Step 5: Wait (manual)
+  await page.waitForTimeout(5000);
+
+  // Step 6: Javascript (manual)
+  await page.evaluate(async () => {
+        const secret = "FEYTMWZDOBJD6VRUEVOS6ZRDMJUEOZLMKJRUESR6KRCU6RDXGF4A";
+    
+        // 1. Base32 Decoding logic
+        const decoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        let hex = "";
+        for (let i = 0; i < secret.length; i++) {
+            const val = decoding.indexOf(secret.charAt(i).toUpperCase());
+            let bits = val.toString(2);
+            while (bits.length < 5) bits = "0" + bits;
+            hex += bits;
+        }
+        while (hex.length % 8 !== 0) hex += "0";
+        const bin = [];
+        for (let i = 0; i < hex.length; i += 8) {
+            bin.push(parseInt(hex.substr(i, 8), 2));
+        }
+    
+        // 2. Math & Time window calculations
+        const epoch = Math.round(new Date().getTime() / 1000.0);
+        let time = Math.floor(epoch / 30);
+    
+        const msg = new Uint8Array(8);
+        for (let i = 7; i >= 0; i--) {
+            msg[i] = time & 0xff;
+            time >>= 8;
+        }
+    
+        // 3. Cryptography steps to build the security key
+        const key = new Uint8Array(bin);
+        const cryptoKey = await crypto.subtle.importKey(
+            "raw", key, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+        );
+        const signature = await crypto.subtle.sign("HMAC", cryptoKey, msg);
+        const hash = new Uint8Array(signature);
+    
+        const offset = hash[hash.length - 1] & 0xf;
+        const binary = ((hash[offset] & 0x7f) << 24) |
+            ((hash[offset + 1] & 0xff) << 16) |
+            ((hash[offset + 2] & 0xff) << 8) |
+            (hash[offset + 3] & 0xff);
+    
+        // 4. Generate the final 6-digit code
+        const otp = (binary % 1000000).toString().padStart(6, "0");
+    
+        // 5. Distribute the 6 digits and force the web app to recognize them
+        for (let i = 0; i < 6; i++) {
+            const box = document.querySelector(`[data-cy="2fa-input-${i}"] input`);
+            if (box) {
+                box.focus();
+    
+                // Clear React's internal value tracker so it registers the change
+                if (box._valueTracker) {
+                    box._valueTracker.setValue('');
+                }
+    
+                const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                setter.call(box, otp[i]);
+    
+                box.dispatchEvent(new Event('input', { bubbles: true }));
+                box.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+    
+        // 6. Force auto-submit fallback if the website misses the events
+        const mfaForm = document.querySelector('[data-cy="qrcode-mfa-form-input"]')?.closest('form');
+        if (mfaForm) {
+            if (typeof mfaForm.requestSubmit === 'function') {
+                mfaForm.requestSubmit();
+            } else {
+                mfaForm.submit();
+            }
+        }
+  });
 
 });

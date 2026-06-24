@@ -16,29 +16,11 @@ export default function Readme() {
             </div>
           </div>
 
-          {/* Core Dependencies */}
-          <section style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: 'var(--shadow)', marginBottom: '24px', border: '1px solid var(--border)' }}>
-            <h2 style={{ fontSize: '18px', color: '#2D3748', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
-              1. Install Dependencies
-            </h2>
-            <p style={{ fontSize: '14px', color: '#4A5568', marginBottom: '16px', lineHeight: '1.6' }}>
-              Open your terminal in the project directory (<code>c:\Users\TanTedWin\Documents\antigravity\SFQA_Playwright</code>) and run the following commands to install Node modules and Playwright browsers.
-            </p>
-            
-            <div style={{ background: '#1A202C', padding: '16px', borderRadius: '8px', color: '#E2E8F0', fontFamily: 'monospace', fontSize: '13px', marginBottom: '16px' }}>
-              <div style={{ marginBottom: '8px' }}># Install Node.js dependencies</div>
-              <div style={{ color: '#63B3ED', marginBottom: '16px' }}>npm install</div>
-              
-              <div style={{ marginBottom: '8px' }}># Install Playwright browsers</div>
-              <div style={{ color: '#63B3ED' }}>npx playwright install</div>
-            </div>
-          </section>
-
           {/* Chrome Extension */}
           <section style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: 'var(--shadow)', marginBottom: '24px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '18px', color: '#2D3748', margin: 0 }}>
-                2. Install Chrome Extension
+                1. Install Chrome Extension
               </h2>
               <a href="/chrome_extension.zip" download className="btn btn-primary" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -71,7 +53,7 @@ export default function Readme() {
                 <strong>CRITICAL:</strong> Click "Details" on the installed extension and toggle ON <strong>Allow in Incognito</strong>. The recorder will not work without this.
               </li>
               <li>
-                Refresh your dashboard page. You can now click "Record from here" on any test case to start capturing.
+                Refresh your dashboard page. You can now start recording or run any test case to start capturing.
               </li>
             </ol>
           </section>
@@ -79,7 +61,7 @@ export default function Readme() {
           {/* Selectors Guide */}
           <section style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: 'var(--shadow)', marginBottom: '24px', border: '1px solid var(--border)' }}>
             <h2 style={{ fontSize: '18px', color: '#2D3748', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
-              3. Supported Element Selectors
+              2. Supported Element Selectors
             </h2>
             <p style={{ fontSize: '14px', color: '#4A5568', marginBottom: '16px', lineHeight: '1.6' }}>
               Use these string locators directly in the dashboard fallback fields. <strong>Do not type <code>page.getBy...</code> methods.</strong>

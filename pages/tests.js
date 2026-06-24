@@ -183,6 +183,21 @@ export default function TestsPage() {
     }
   };
 
+  const executeManualScript = async (code) => {
+    try {
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const fn = new AsyncFunction(code);
+      const result = await fn();
+      if (result !== undefined) {
+        alert('Script returned:\n\n' + (typeof result === 'object' ? JSON.stringify(result, null, 2) : result));
+      } else {
+        alert('Script executed successfully (no return value).');
+      }
+    } catch (e) {
+      alert('Script Error:\n\n' + e.message);
+    }
+  };
+
   const startRecord = async (test, throughStepIndex = null) => {
     if (!test) return;
     if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-sfqa-extension-active')) {
@@ -190,7 +205,9 @@ export default function TestsPage() {
       window.postMessage({
         source: "sfqa-dashboard",
         action: "START_RECORDING",
-        url: test.url
+        url: test.url,
+        test: { ...test, steps: normalizeSteps(test.steps || localSteps, test.url) },
+        throughStepIndex
       }, "*");
       return;
     }
@@ -738,11 +755,12 @@ export default function TestsPage() {
                             <option>Assert Visible</option>
                             <option>Assert Text</option>
                             <option>Wait</option>
+                            <option>Javascript</option>
                             {idx === 0 && <option>Navigate</option>}
                           </select>
                         </div>
 
-                        {idx > 0 && step.action !== 'Navigate' && step.action !== 'Wait' && (
+                        {idx > 0 && step.action !== 'Navigate' && step.action !== 'Wait' && step.action !== 'Javascript' && (
                           <>
                             <div className="form-group">
                               <label style={{ fontSize: 10.5 }}>Selector Type</label>
@@ -788,11 +806,21 @@ export default function TestsPage() {
                           </>
                         )}
 
-                        {(idx === 0 || step.action === 'Type' || step.action === 'Assert Text' || step.action === 'Wait') && (
+                        {(idx === 0 || step.action === 'Type' || step.action === 'Assert Text' || step.action === 'Wait' || step.action === 'Javascript') && (
                           <div className="form-group">
-                            <label style={{ fontSize: 10.5 }}>{idx === 0 ? 'Navigation URL' : step.action === 'Wait' ? 'Delay (ms)' : 'Value / Text'}</label>
-                            <input style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)}
-                              placeholder={idx === 0 ? "https://..." : step.action === 'Wait' ? "e.g. 2000" : "Value to input or assert"}/>
+                            <label style={{ fontSize: 10.5 }}>{idx === 0 ? 'Navigation URL' : step.action === 'Wait' ? 'Delay (ms)' : step.action === 'Javascript' ? 'JavaScript Code' : 'Value / Text'}</label>
+                            {step.action === 'Javascript' ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <textarea style={{ fontSize: 12.5, padding: '5px 8px', minHeight: '250px', fontFamily: 'monospace' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)} placeholder="return 'Hello';" />
+                                <button type="button" className="btn btn-secondary" style={{ alignSelf: 'flex-start', padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }} onClick={() => executeManualScript(step.value)}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                  Execute
+                                </button>
+                              </div>
+                            ) : (
+                              <input style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)}
+                                placeholder={idx === 0 ? "https://..." : step.action === 'Wait' ? "e.g. 2000" : "Value to input or assert"}/>
+                            )}
                           </div>
                         )}
                       </div>
