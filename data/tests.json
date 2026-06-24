@@ -121,11 +121,11 @@
   },
   {
     "id": "SFT-T502",
-    "name": "Test run qa6",
+    "name": "Test run 6",
     "url": "https://qa6-kms.kinesis.money/login",
     "zephyrId": "SFT-T502",
     "suite": "All Tests",
-    "specFile": "tests/test-run-qa6.spec.js",
+    "specFile": "tests/test-run-6.spec.js",
     "type": "Web (Desktop)",
     "status": "idle",
     "lastRun": null,
