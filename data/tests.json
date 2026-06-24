@@ -194,6 +194,18 @@
         "value": ""
       },
       {
+        "id": "step-1782288197377",
+        "action": "Wait",
+        "selectorType": "manual",
+        "variableId": "",
+        "fallbacks": [
+          "",
+          "",
+          ""
+        ],
+        "value": "5000"
+      },
+      {
         "id": "step-1782286898070",
         "action": "Click",
         "selectorType": "manual",
