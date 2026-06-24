@@ -101,7 +101,40 @@
         "action": "Navigate",
         "selectorType": "manual",
         "fallbacks": [],
-        "value": "https://qa3-kms.kinesis.money/home"
+        "value": "https://qa3-kms.kinesis.money/login"
+      },
+      {
+        "id": "step-1782265673485",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_l_",
+          "input[name=\"email\"]",
+          "input.css-lukafr"
+        ],
+        "value": "tedwin.tan+qa3_1@kinesis.money"
+      },
+      {
+        "id": "step-1782265673490",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_m_",
+          "input[name=\"password\"]",
+          "input.css-69tkhw"
+        ],
+        "value": "Ttd@11190"
+      },
+      {
+        "id": "step-1782265673944",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "[data-testid=\"continue-with-email\"]",
+          "[data-qa=\"continue-with-email\"]",
+          "[data-cy=\"continue-with-email\"]"
+        ],
+        "value": ""
       }
     ]
   },
