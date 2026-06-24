@@ -737,11 +737,12 @@ export default function TestsPage() {
                             <option>Type</option>
                             <option>Assert Visible</option>
                             <option>Assert Text</option>
+                            <option>Wait</option>
                             {idx === 0 && <option>Navigate</option>}
                           </select>
                         </div>
 
-                        {idx > 0 && step.action !== 'Navigate' && (
+                        {idx > 0 && step.action !== 'Navigate' && step.action !== 'Wait' && (
                           <>
                             <div className="form-group">
                               <label style={{ fontSize: 10.5 }}>Selector Type</label>
@@ -787,11 +788,11 @@ export default function TestsPage() {
                           </>
                         )}
 
-                        {(idx === 0 || step.action === 'Type' || step.action === 'Assert Text') && (
+                        {(idx === 0 || step.action === 'Type' || step.action === 'Assert Text' || step.action === 'Wait') && (
                           <div className="form-group">
-                            <label style={{ fontSize: 10.5 }}>{idx === 0 ? 'Navigation URL' : 'Value / Text'}</label>
+                            <label style={{ fontSize: 10.5 }}>{idx === 0 ? 'Navigation URL' : step.action === 'Wait' ? 'Delay (ms)' : 'Value / Text'}</label>
                             <input style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)}
-                              placeholder={idx === 0 ? "https://..." : "Value to input or assert"}/>
+                              placeholder={idx === 0 ? "https://..." : step.action === 'Wait' ? "e.g. 2000" : "Value to input or assert"}/>
                           </div>
                         )}
                       </div>

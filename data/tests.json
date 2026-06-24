@@ -1,90 +1,5 @@
 [
   {
-    "id": "test-74852972",
-    "name": "Test run 4",
-    "url": "https://www.google.com/",
-    "zephyrId": "",
-    "suite": "All Tests",
-    "specFile": "tests/test-run-4.spec.js",
-    "type": "Web (Desktop)",
-    "status": "failed",
-    "lastRun": "2026-06-24T01:34:52.254Z",
-    "created": "2026-06-22T02:35:42.187Z",
-    "steps": [
-      {
-        "id": "step-1782095741258",
-        "action": "Navigate",
-        "selectorType": "manual",
-        "fallbacks": [],
-        "value": "https://www.merriam-webster.com/dictionary/test"
-      },
-      {
-        "id": "step-1782207487821",
-        "action": "Type",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#APjFqb",
-          "textarea[name=\"q\"]",
-          "[aria-label=\"Search\"]"
-        ],
-        "value": "test"
-      },
-      {
-        "id": "step-1782207511335",
-        "action": "Click",
-        "selectorType": "manual",
-        "fallbacks": [
-          "a.zReHs",
-          ".zReHs",
-          "div#rso > div:nth-of-type(6) > div > div > div > div > div > div > span > a"
-        ],
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "test-a126d3bb",
-    "name": "test run 5",
-    "url": "https://www.google.com/",
-    "zephyrId": "",
-    "suite": "All Tests",
-    "specFile": "tests/test-run-5.spec.js",
-    "type": "Web (Desktop)",
-    "status": "idle",
-    "lastRun": null,
-    "created": "2026-06-22T02:41:21.107Z",
-    "steps": [
-      {
-        "id": "step-1782096080110",
-        "action": "Navigate",
-        "selectorType": "manual",
-        "fallbacks": [],
-        "value": "https://www.google.com/"
-      }
-    ]
-  },
-  {
-    "id": "test-5129da89",
-    "name": "test 6",
-    "url": "https://www.reddit.com/",
-    "zephyrId": "",
-    "suite": "All Tests",
-    "specFile": "tests/test-6.spec.js",
-    "type": "Web (Desktop)",
-    "status": "idle",
-    "lastRun": null,
-    "created": "2026-06-22T08:06:44.333Z",
-    "steps": [
-      {
-        "id": "step-1782115602558",
-        "action": "Navigate",
-        "selectorType": "manual",
-        "fallbacks": [],
-        "value": "https://www.reddit.com/"
-      }
-    ]
-  },
-  {
     "id": "test-82744b3e",
     "name": "test run from playwright recorder",
     "url": "https://qa3-kms.kinesis.money/home",
@@ -101,7 +16,40 @@
         "action": "Navigate",
         "selectorType": "manual",
         "fallbacks": [],
-        "value": "https://qa3-kms.kinesis.money/home"
+        "value": "https://qa3-kms.kinesis.money/login"
+      },
+      {
+        "id": "step-1782276565347",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_m_",
+          "input[name=\"email\"]",
+          "input.css-lukafr"
+        ],
+        "value": "tedwin.tan+qa3_1@kinesis.money"
+      },
+      {
+        "id": "step-1782276565350",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_n_",
+          "input[name=\"password\"]",
+          "input.css-69tkhw"
+        ],
+        "value": "Ttd@11190"
+      },
+      {
+        "id": "step-1782276565855",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "[data-testid=\"continue-with-email\"]",
+          "[data-qa=\"continue-with-email\"]",
+          "[data-cy=\"continue-with-email\"]"
+        ],
+        "value": ""
       }
     ]
   },
