@@ -219,6 +219,17 @@ export default function TestsPage() {
 
   const startRun = async (test) => {
     if (!test) return;
+    
+    if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-sfqa-extension-active')) {
+      setRunning(true);
+      window.postMessage({
+        source: "sfqa-dashboard",
+        action: "START_TEST_RUN",
+        test: { ...test, steps: normalizeSteps(test.steps || localSteps, test.url) }
+      }, "*");
+      return;
+    }
+
     setRunning(true);
     try {
       const res = await fetch('/api/trigger-run', {
@@ -271,7 +282,7 @@ export default function TestsPage() {
   };
 
   useEffect(() => {
-    const handleExtensionMessage = (event) => {
+    const handleExtensionMessage = async (event) => {
       if (event.source !== window) return;
       if (event.data && event.data.source === "sfqa-extension") {
         if (event.data.action === "STEP_RECORDED") {
@@ -286,6 +297,20 @@ export default function TestsPage() {
             }
             return [...prev, newStep];
           });
+        } else if (event.data.action === "RUN_LOG") {
+          const payload = event.data.payload;
+          if (payload && payload.type === 'done') {
+             // Sync tests state and clear running indicator
+             try {
+               const testsRes = await fetch('/api/tests');
+               const updatedTests = await testsRes.json();
+               setTests(Array.isArray(updatedTests) ? updatedTests : []);
+               alert('Extension Run Finished');
+             } catch(e){}
+             setRunning(false);
+          } else if (payload && payload.line) {
+            console.log(payload.line);
+          }
         }
       }
     };

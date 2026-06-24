@@ -8,7 +8,7 @@
     "specFile": "tests/test-run-4.spec.js",
     "type": "Web (Desktop)",
     "status": "failed",
-    "lastRun": "2026-06-23T09:39:01.052Z",
+    "lastRun": "2026-06-24T01:34:52.254Z",
     "created": "2026-06-22T02:35:42.187Z",
     "steps": [
       {
@@ -92,8 +92,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-run-from-playwright-recorder.spec.js",
     "type": "Web (Desktop)",
-    "status": "idle",
-    "lastRun": null,
+    "status": "passed",
+    "lastRun": "2026-06-24T01:32:59.883Z",
     "created": "2026-06-22T10:57:02.016Z",
     "steps": [
       {
