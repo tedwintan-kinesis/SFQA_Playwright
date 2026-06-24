@@ -114,8 +114,4 @@ test('Test run 6', async ({ page }) => {
   // Step 7: Wait (manual)
   await page.waitForTimeout(5000);
 
-  // Step 8: Click (manual)
-  const el8 = await findElementWithFallback(page, ["[data-testid=\"logout-button\"]","[data-qa=\"logout-button\"]","[data-cy=\"logout-button\"]"]);
-  await el8.click();
-
 });
