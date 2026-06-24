@@ -139,17 +139,6 @@
         "value": "https://qa6-kms.kinesis.money/home"
       },
       {
-        "id": "step-1782290733101",
-        "action": "Click",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#_r_j_",
-          "input[name=\"email\"]",
-          "input.css-lukafr"
-        ],
-        "value": ""
-      },
-      {
         "id": "step-1782290735032",
         "action": "Type",
         "selectorType": "manual",
@@ -181,6 +170,18 @@
           "[data-cy=\"continue-with-email\"]"
         ],
         "value": ""
+      },
+      {
+        "id": "step-1782290835778",
+        "action": "Wait",
+        "selectorType": "manual",
+        "variableId": "",
+        "fallbacks": [
+          "",
+          "",
+          ""
+        ],
+        "value": "5000"
       }
     ]
   }
