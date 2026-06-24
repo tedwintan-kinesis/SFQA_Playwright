@@ -115,7 +115,6 @@ export default function GlobalsPage() {
           <div className="section-hdr" style={{ marginBottom: 8 }}>Globals</div>
           <ul className="folder-list">
             <li className="folder-item active">Element Masterlist <span className="badge">{vars.length}</span></li>
-            <li className="folder-item">Secrets <span className="badge">1</span></li>
           </ul>
 
           <div style={{ marginTop: 'auto', fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, paddingTop: 20 }}>
