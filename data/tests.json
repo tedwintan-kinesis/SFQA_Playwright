@@ -136,21 +136,10 @@
         "action": "Navigate",
         "selectorType": "manual",
         "fallbacks": [],
-        "value": "https://qa6-kms.kinesis.money/login"
+        "value": "https://qa6-kms.kinesis.money/home"
       },
       {
-        "id": "step-1782286828672",
-        "action": "Click",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#_r_j_",
-          "input[name=\"email\"]",
-          "input.css-lukafr"
-        ],
-        "value": ""
-      },
-      {
-        "id": "step-1782286851728",
+        "id": "step-1782290735032",
         "action": "Type",
         "selectorType": "manual",
         "fallbacks": [
@@ -161,18 +150,7 @@
         "value": "fatin.nadhirah+qa6.71@abx.com"
       },
       {
-        "id": "step-1782286851994",
-        "action": "Click",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#_r_k_",
-          "input[name=\"password\"]",
-          "input.css-69tkhw"
-        ],
-        "value": ""
-      },
-      {
-        "id": "step-1782286871648",
+        "id": "step-1782290735040",
         "action": "Type",
         "selectorType": "manual",
         "fallbacks": [
@@ -183,7 +161,7 @@
         "value": "Test123$"
       },
       {
-        "id": "step-1782286875682",
+        "id": "step-1782290740465",
         "action": "Click",
         "selectorType": "manual",
         "fallbacks": [
@@ -194,7 +172,7 @@
         "value": ""
       },
       {
-        "id": "step-1782288197377",
+        "id": "step-1782290835778",
         "action": "Wait",
         "selectorType": "manual",
         "variableId": "",
