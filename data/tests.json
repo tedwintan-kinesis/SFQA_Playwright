@@ -118,5 +118,26 @@
         "value": "https://qa3-kms.kinesis.money/login"
       }
     ]
+  },
+  {
+    "id": "test-29a168c3",
+    "name": "Test run qa6",
+    "url": "https://qa6-kms.kinesis.money/login",
+    "zephyrId": "",
+    "suite": "All Tests",
+    "specFile": "tests/test-run-qa6.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-24T07:20:42.277Z",
+    "steps": [
+      {
+        "id": "step-1782285637973",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://qa6-kms.kinesis.money/login"
+      }
+    ]
   }
 ]
