@@ -91,20 +91,19 @@ test('Test run 6', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await showAutomationIndicator(page);
 
-  // Step 2: Click (manual)
+  // Step 2: Type (manual)
   const el2 = await findElementWithFallback(page, ["#_r_j_","input[name=\"email\"]","input.css-lukafr"]);
-  await el2.click();
+  await el2.fill('fatin.nadhirah+qa6.71@abx.com');
 
   // Step 3: Type (manual)
-  const el3 = await findElementWithFallback(page, ["#_r_j_","input[name=\"email\"]","input.css-lukafr"]);
-  await el3.fill('fatin.nadhirah+qa6.71@abx.com');
+  const el3 = await findElementWithFallback(page, ["#_r_k_","input[name=\"password\"]","input.css-69tkhw"]);
+  await el3.fill('Test123$');
 
-  // Step 4: Type (manual)
-  const el4 = await findElementWithFallback(page, ["#_r_k_","input[name=\"password\"]","input.css-69tkhw"]);
-  await el4.fill('Test123$');
+  // Step 4: Click (manual)
+  const el4 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
+  await el4.click();
 
-  // Step 5: Click (manual)
-  const el5 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
-  await el5.click();
+  // Step 5: Wait (manual)
+  await page.waitForTimeout(5000);
 
 });
