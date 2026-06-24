@@ -92,23 +92,23 @@ test('Test run qa6', async ({ page }) => {
   await showAutomationIndicator(page);
 
   // Step 2: Click (manual)
-  const el2 = await findElementWithFallback(page, ["#_r_q_","input[name=\"email\"]","input.css-lukafr"]);
+  const el2 = await findElementWithFallback(page, ["#_r_j_","input[name=\"email\"]","input.css-lukafr"]);
   await el2.click();
 
   // Step 3: Type (manual)
-  const el3 = await findElementWithFallback(page, ["#_r_q_","input[name=\"email\"]","input.css-lukafr"]);
+  const el3 = await findElementWithFallback(page, ["#_r_j_","input[name=\"email\"]","input.css-lukafr"]);
   await el3.fill('fatin.nadhirah+qa6.71@abx.com');
 
-  // Step 4: Type (manual)
-  const el4 = await findElementWithFallback(page, ["#_r_r_","input[name=\"password\"]","input.css-69tkhw"]);
-  await el4.fill('Test123$');
+  // Step 4: Click (manual)
+  const el4 = await findElementWithFallback(page, ["#_r_k_","input[name=\"password\"]","input.css-69tkhw"]);
+  await el4.click();
 
-  // Step 5: Click (manual)
-  const el5 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
-  await el5.click();
+  // Step 5: Type (manual)
+  const el5 = await findElementWithFallback(page, ["#_r_k_","input[name=\"password\"]","input.css-69tkhw"]);
+  await el5.fill('Test123$');
 
   // Step 6: Click (manual)
-  const el6 = await findElementWithFallback(page, ["span:has-text(\"✕\")","text=\"✕\"","div#sfqa-recording-indicator > span:nth-of-type(2)"]);
+  const el6 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
   await el6.click();
 
   // Step 7: Click (manual)
