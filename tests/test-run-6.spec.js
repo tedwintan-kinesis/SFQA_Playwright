@@ -111,8 +111,11 @@ test('Test run 6', async ({ page }) => {
   const el6 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
   await el6.click();
 
-  // Step 7: Click (manual)
-  const el7 = await findElementWithFallback(page, ["[data-testid=\"logout-button\"]","[data-qa=\"logout-button\"]","[data-cy=\"logout-button\"]"]);
-  await el7.click();
+  // Step 7: Wait (manual)
+  await page.waitForTimeout(5000);
+
+  // Step 8: Click (manual)
+  const el8 = await findElementWithFallback(page, ["[data-testid=\"logout-button\"]","[data-qa=\"logout-button\"]","[data-cy=\"logout-button\"]"]);
+  await el8.click();
 
 });
