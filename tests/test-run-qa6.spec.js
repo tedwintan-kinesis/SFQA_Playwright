@@ -1,4 +1,4 @@
-// @zephyrId -
+// @zephyrId SFT-T502
 // @startUrl https://qa6-kms.kinesis.money/login
 
 const { test, expect } = require('@playwright/test');
@@ -90,5 +90,29 @@ test('Test run qa6', async ({ page }) => {
   await page.goto('https://qa6-kms.kinesis.money/login');
   await page.waitForLoadState('networkidle');
   await showAutomationIndicator(page);
+
+  // Step 2: Click (manual)
+  const el2 = await findElementWithFallback(page, ["#_r_q_","input[name=\"email\"]","input.css-lukafr"]);
+  await el2.click();
+
+  // Step 3: Type (manual)
+  const el3 = await findElementWithFallback(page, ["#_r_q_","input[name=\"email\"]","input.css-lukafr"]);
+  await el3.fill('fatin.nadhirah+qa6.71@abx.com');
+
+  // Step 4: Type (manual)
+  const el4 = await findElementWithFallback(page, ["#_r_r_","input[name=\"password\"]","input.css-69tkhw"]);
+  await el4.fill('Test123$');
+
+  // Step 5: Click (manual)
+  const el5 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
+  await el5.click();
+
+  // Step 6: Click (manual)
+  const el6 = await findElementWithFallback(page, ["span:has-text(\"✕\")","text=\"✕\"","div#sfqa-recording-indicator > span:nth-of-type(2)"]);
+  await el6.click();
+
+  // Step 7: Click (manual)
+  const el7 = await findElementWithFallback(page, ["[data-testid=\"logout-button\"]","[data-qa=\"logout-button\"]","[data-cy=\"logout-button\"]"]);
+  await el7.click();
 
 });
