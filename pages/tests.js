@@ -18,6 +18,7 @@ export default function TestsPage() {
   const [editTest, setEditTest] = useState(null);
   const [form, setForm] = useState({ name: '', url: '', zephyrId: '', suite: 'All Tests', specFile: 'tests/Signup Flow/new-kms-signup.spec.js' });
   const [saving, setSaving] = useState(false);
+  const [testVariables, setTestVariables] = useState([]);
 
   // Folder creation modal state
   const [showFolderModal, setShowFolderModal] = useState(false);
@@ -66,6 +67,11 @@ export default function TestsPage() {
     fetch('/api/variables')
       .then(res => res.json())
       .then(data => setGlobalVars(data || []))
+      .catch(err => console.error(err));
+
+    fetch('/api/test-variables')
+      .then(res => res.json())
+      .then(data => setTestVariables(data || []))
       .catch(err => console.error(err));
   }, []);
 
@@ -736,13 +742,13 @@ export default function TestsPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)' }}>Step {idx + 1}</span>
                           <div style={{ display: 'flex', gap: 4 }}>
-                            <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
+                            <button type="button" className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: 11 }}
                               onClick={() => moveStepUp(idx)} disabled={idx <= 1}>Up</button>
-                            <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
+                            <button type="button" className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: 11 }}
                               onClick={() => moveStepDown(idx)} disabled={idx === 0 || idx === localSteps.length - 1}>Down</button>
-                            <button type="button" className="btn btn-secondary" style={{ padding: '2px 5px', fontSize: 9 }}
+                            <button type="button" className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: 11 }}
                               onClick={() => startRecord(selectedTestForSteps, idx)} disabled={recording || running}>Record from here</button>
-                            <button type="button" className="btn btn-danger" style={{ padding: '2px 5px', fontSize: 9 }}
+                            <button type="button" className="btn btn-danger" style={{ padding: '5px 10px', fontSize: 11 }}
                               onClick={() => deleteStep(idx)} disabled={idx === 0}>Delete</button>
                           </div>
                         </div>
@@ -812,10 +818,33 @@ export default function TestsPage() {
                             {step.action === 'Javascript' ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <textarea style={{ fontSize: 12.5, padding: '5px 8px', minHeight: '250px', fontFamily: 'monospace' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)} placeholder="return 'Hello';" />
-                                <button type="button" className="btn btn-secondary" style={{ alignSelf: 'flex-start', padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }} onClick={() => executeManualScript(step.value)}>
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                                  Execute
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <button type="button" className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }} onClick={() => executeManualScript(step.value)}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                    Execute
+                                  </button>
+                                </div>
+                                <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-sidebar)', borderRadius: 6, border: '1px solid var(--border)' }}>
+                                  <h4 style={{ fontSize: 11, marginBottom: 8, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Store Result to Variable</h4>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <select 
+                                      style={{ fontSize: 12.5, padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 4, width: '200px' }}
+                                      value={step.storeVariable || ''}
+                                      onChange={e => updateStep(idx, 'storeVariable', e.target.value)}
+                                    >
+                                      <option value="">-- Select Variable --</option>
+                                      {[...testVariables].sort((a,b) => a.key.localeCompare(b.key)).map(v => (
+                                        <option key={v.id} value={v.key}>{v.key}</option>
+                                      ))}
+                                    </select>
+                                    <input 
+                                      style={{ fontSize: 12.5, padding: '6px 10px', flex: 1, border: '1px solid var(--border)', borderRadius: 4 }} 
+                                      value={step.storeVariable || ''} 
+                                      onChange={e => updateStep(idx, 'storeVariable', e.target.value)} 
+                                      placeholder="Or type custom variable name (e.g., MY_VAR)"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             ) : (
                               <input style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.value || ''} onChange={e => updateStep(idx, 'value', e.target.value)}

@@ -1,5 +1,5 @@
 // @ts-check
-const { defineConfig, devices } = require('@playwright/test');
+const { defineConfig } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -19,14 +19,15 @@ module.exports = defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 15000,
     navigationTimeout: 30000,
+    viewport: null,
     launchOptions: {
-      args: ['--incognito'],
+      devtools: true,
     },
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { channel: 'chromium' },
     },
   ],
   outputDir: 'test-results/',

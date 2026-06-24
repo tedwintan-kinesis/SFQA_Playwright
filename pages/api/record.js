@@ -12,19 +12,31 @@ function buildPrepSpec(test, throughStepIndex) {
   const steps = Number.isInteger(throughStepIndex)
     ? (test.steps || []).slice(0, throughStepIndex + 1)
     : [];
-  let body = `  await page.goto('${escapeString(test.url)}');\n`;
+  let body = `  // Position window on left half via CDP\n`;
+  body += `  const cdp = await page.context().newCDPSession(page);\n`;
+  body += `  const { windowId } = await cdp.send('Browser.getWindowForTarget');\n`;
+  body += `  const screen = await page.evaluate(() => ({ width: window.screen.availWidth, height: window.screen.availHeight }));\n`;
+  body += `  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal', left: 0, top: 0, width: Math.floor(screen.width / 2), height: screen.height } });\n\n`;
+  body += `  await page.goto('${escapeString(test.url)}');\n`;
   body += `  await showRecordingIndicator(page);\n`;
+
+  const processValue = (val) => {
+    if (!val) return "''";
+    let escaped = val.replace(/`/g, '\\`');
+    escaped = escaped.replace(/\{\{([^}]+)\}\}/g, "${process.env['$1']}");
+    return `\`${escaped}\``;
+  };
 
   steps.forEach((step, idx) => {
     if (idx === 0 || step.action === 'Navigate') {
-      body += `  await page.goto('${escapeString(step.value || test.url)}');\n`;
+      body += `  await page.goto(${processValue(step.value || test.url)});\n`;
       body += `  await showRecordingIndicator(page);\n`;
     } else if (step.action === 'Click') {
       const selector = (step.fallbacks || []).find(s => s && s.trim()) || 'body';
       body += `  await page.locator('${escapeString(selector)}').first().click();\n`;
     } else if (step.action === 'Type') {
       const selector = (step.fallbacks || []).find(s => s && s.trim()) || 'body';
-      body += `  await page.locator('${escapeString(selector)}').first().fill('${escapeString(step.value)}');\n`;
+      body += `  await page.locator('${escapeString(selector)}').first().fill(${processValue(step.value)});\n`;
     } else if (step.action === 'Assert Visible') {
       const selector = (step.fallbacks || []).find(s => s && s.trim()) || 'body';
       body += `  await page.locator('${escapeString(selector)}').first().waitFor({ state: 'visible' });\n`;
@@ -124,7 +136,7 @@ export default async function handler(req, res) {
   const tmpSpec = path.join(os.tmpdir(), `sfqa-record-${test.id}-${Date.now()}.spec.js`);
   fs.writeFileSync(tmpSpec, buildPrepSpec(test, throughStepIndex), 'utf-8');
 
-  // Temp playwright config with incognito launch args
+  // Temp playwright config with maximize and devtools options
   const tmpConfig = path.join(os.tmpdir(), `sfqa-playwright-config-${Date.now()}.js`);
   fs.writeFileSync(tmpConfig, `
 const { defineConfig, devices } = require('@playwright/test');
@@ -132,22 +144,23 @@ module.exports = defineConfig({
   testDir: '${tmpSpec.replace(/\\/g, '/')}',
   use: {
     headless: false,
+    viewport: null,
     launchOptions: {
-      args: ['--incognito'],
+      devtools: true,
     },
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [{ name: 'chromium', use: { channel: 'chromium' } }],
 });
 `, 'utf-8');
 
   const child = spawn(
     process.execPath,
-    [playwrightCli, 'test', tmpSpec, '--config', tmpConfig, '--headed', '--debug', '--reporter=line'],
+    [playwrightCli, 'test', tmpSpec, '--config', tmpConfig, '--headed', '--reporter=line'],
     {
       cwd: rootDir,
       detached: true,
       stdio: 'ignore',
-      env: { ...process.env, PWDEBUG: '1' },
+      env: { ...process.env },
     }
   );
   child.unref();

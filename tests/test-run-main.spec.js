@@ -1,4 +1,4 @@
-// @zephyrId -
+// @zephyrId SFT-T505
 // @startUrl https://qa3-kms.kinesis.money/home
 
 const { test, expect } = require('@playwright/test');
@@ -81,11 +81,12 @@ async function findElementWithFallback(page, selectors) {
   return page.locator(stable || selectors[0] || 'body');
 }
 
-test('test run from playwright recorder', async ({ page }) => {
-  // Maximize window via CDP
+test('Test run Main', async ({ page }) => {
+  // Position window on left half via CDP
   const cdp = await page.context().newCDPSession(page);
   const { windowId } = await cdp.send('Browser.getWindowForTarget');
-  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'maximized' } });
+  const screen = await page.evaluate(() => ({ width: window.screen.availWidth, height: window.screen.availHeight }));
+  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal', left: 0, top: 0, width: Math.floor(screen.width / 2), height: screen.height } });
   await cdp.send('Page.enable');
   page.on('console', msg => console.log('[BROWSER]', msg.type(), msg.text()));
 
@@ -99,11 +100,11 @@ test('test run from playwright recorder', async ({ page }) => {
   await showAutomationIndicator(page);
 
   // Step 2: Type (manual)
-  const el2 = await findElementWithFallback(page, ["#_r_m_","input[name=\"email\"]","input.css-lukafr"]);
+  const el2 = await findElementWithFallback(page, ["#_r_l_","input[name=\"email\"]","input.css-lukafr"]);
   await el2.fill(`tedwin.tan+qa3_1@kinesis.money`);
 
   // Step 3: Type (manual)
-  const el3 = await findElementWithFallback(page, ["#_r_n_","input[name=\"password\"]","input.css-69tkhw"]);
+  const el3 = await findElementWithFallback(page, ["#_r_m_","input[name=\"password\"]","input.css-69tkhw"]);
   await el3.fill(`Ttd@11190`);
 
   // Step 4: Click (manual)
@@ -161,15 +162,10 @@ test('test run from playwright recorder', async ({ page }) => {
   });
 
   // Step 6: Wait (manual)
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(4000);
 
-  // Step 7: Click (manual)
-  const el7 = await findElementWithFallback(page, ["#_r_p_","input.css-cpz9ua",".css-cpz9ua"]);
-  await el7.click();
-
-  // Step 8: Type (manual) - use keyboard.type for number input + variable
-  const el8 = await findElementWithFallback(page, ["#_r_p_","input.css-cpz9ua",".css-cpz9ua"]);
-  await el8.click();
-  await page.keyboard.type(process.env['2FA_Code'] || '');
+  // Step 7: Type (manual)
+  const el7 = await findElementWithFallback(page, ["#_r_q_","input.css-cpz9ua",".css-cpz9ua"]);
+  await el7.fill(`${process.env['2FA_Code']}`);
 
 });
