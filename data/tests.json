@@ -137,6 +137,72 @@
         "selectorType": "manual",
         "fallbacks": [],
         "value": "https://qa6-kms.kinesis.money/login"
+      },
+      {
+        "id": "step-1782285965909",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_q_",
+          "input[name=\"email\"]",
+          "input.css-lukafr"
+        ],
+        "value": ""
+      },
+      {
+        "id": "step-1782285978388",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_q_",
+          "input[name=\"email\"]",
+          "input.css-lukafr"
+        ],
+        "value": "fatin.nadhirah+qa6.71@abx.com"
+      },
+      {
+        "id": "step-1782285984645",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_r_",
+          "input[name=\"password\"]",
+          "input.css-69tkhw"
+        ],
+        "value": "Test123$"
+      },
+      {
+        "id": "step-1782285984712",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "[data-testid=\"continue-with-email\"]",
+          "[data-qa=\"continue-with-email\"]",
+          "[data-cy=\"continue-with-email\"]"
+        ],
+        "value": ""
+      },
+      {
+        "id": "step-1782286027815",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "span:has-text(\"✕\")",
+          "text=\"✕\"",
+          "div#sfqa-recording-indicator > span:nth-of-type(2)"
+        ],
+        "value": ""
+      },
+      {
+        "id": "step-1782286030795",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "[data-testid=\"logout-button\"]",
+          "[data-qa=\"logout-button\"]",
+          "[data-cy=\"logout-button\"]"
+        ],
+        "value": ""
       }
     ]
   }
