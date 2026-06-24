@@ -204,17 +204,6 @@
           ""
         ],
         "value": "5000"
-      },
-      {
-        "id": "step-1782286898070",
-        "action": "Click",
-        "selectorType": "manual",
-        "fallbacks": [
-          "[data-testid=\"logout-button\"]",
-          "[data-qa=\"logout-button\"]",
-          "[data-cy=\"logout-button\"]"
-        ],
-        "value": ""
       }
     ]
   }
