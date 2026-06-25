@@ -1,4 +1,4 @@
-// @zephyrId -
+// @zephyrId SFT-T500
 // @startUrl https://qa3-kms.kinesis.money/login
 
 const { test, expect } = require('@playwright/test');
@@ -30,6 +30,7 @@ async function showAutomationIndicator(page) {
     ].join(';');
 
     const text = document.createElement('span');
+    text.id = 'sfqa-indicator-text';
     text.textContent = '"SFQA Reflect" Automation Testing started debugging this browser';
     text.style.cssText = 'font-weight:600';
 
@@ -66,25 +67,41 @@ async function showAutomationIndicator(page) {
   }).catch(() => {});
 }
 
+async function updateIndicator(page, text) {
+  await page.evaluate((t) => {
+    const span = document.getElementById('sfqa-indicator-text');
+    if (span) span.textContent = t;
+  }, text).catch(() => {});
+}
+
 async function findElementWithFallback(page, selectors) {
+  // Instantly pick first visible selector — Playwright auto-wait on action handles the rest
   for (const sel of selectors) {
     if (!sel) continue;
     try {
-      const locator = page.locator(sel);
-      if (await locator.count() > 0 && await locator.first().isVisible()) {
-        return locator.first();
+      if (await page.locator(sel).first().isVisible()) {
+        return page.locator(sel).first();
       }
     } catch (e) {}
   }
-  return page.locator(selectors[0] || 'body');
+  // Last resort: stable selector
+  const stable = selectors.find(s => s && !s.startsWith('#_r_'));
+  return page.locator(stable || selectors[0] || 'body');
 }
 
 test('Test Run 7', async ({ page }) => {
-  await page.goto('https://qa3-kms.kinesis.money/login');
-  await showAutomationIndicator(page);
+  // Position window on left half via CDP
+  const cdp = await page.context().newCDPSession(page);
+  const { windowId } = await cdp.send('Browser.getWindowForTarget');
+  const screen = await page.evaluate(() => ({ width: window.screen.availWidth, height: window.screen.availHeight }));
+  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal', left: 0, top: 0, width: Math.floor(screen.width / 2), height: screen.height } });
+  await cdp.send('Page.enable');
+  page.on('console', msg => console.log('[BROWSER]', msg.type(), msg.text()));
+
 
   // Step 1: Navigate (manual)
-  await page.goto('https://qa3-kms.kinesis.money/login');
+  await page.goto(`https://qa3-kms.kinesis.money/login`);
   await showAutomationIndicator(page);
+  await updateIndicator(page, `Running Step 1: Navigate`);
 
 });

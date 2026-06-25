@@ -1,5 +1,5 @@
-// @zephyrId -
-// @startUrl https://qa3-kms.kinesis.money/home
+// @zephyrId SFT-T511
+// @startUrl https://qa3-kms.kinesis.money/login
 
 const { test, expect } = require('@playwright/test');
 
@@ -30,6 +30,7 @@ async function showAutomationIndicator(page) {
     ].join(';');
 
     const text = document.createElement('span');
+    text.id = 'sfqa-indicator-text';
     text.textContent = '"SFQA Reflect" Automation Testing started debugging this browser';
     text.style.cssText = 'font-weight:600';
 
@@ -66,6 +67,13 @@ async function showAutomationIndicator(page) {
   }).catch(() => {});
 }
 
+async function updateIndicator(page, text) {
+  await page.evaluate((t) => {
+    const span = document.getElementById('sfqa-indicator-text');
+    if (span) span.textContent = t;
+  }, text).catch(() => {});
+}
+
 async function findElementWithFallback(page, selectors) {
   // Instantly pick first visible selector — Playwright auto-wait on action handles the rest
   for (const sel of selectors) {
@@ -81,7 +89,7 @@ async function findElementWithFallback(page, selectors) {
   return page.locator(stable || selectors[0] || 'body');
 }
 
-test('test run from playwright recorder', async ({ page }) => {
+test('Test KMS Login', async ({ page }) => {
   // Position window on left half via CDP
   const cdp = await page.context().newCDPSession(page);
   const { windowId } = await cdp.send('Browser.getWindowForTarget');
@@ -94,20 +102,34 @@ test('test run from playwright recorder', async ({ page }) => {
   // Step 1: Navigate (manual)
   await page.goto(`https://qa3-kms.kinesis.money/login`);
   await showAutomationIndicator(page);
+  await updateIndicator(page, `Running Step 1: Navigate`);
 
-  // Step 2: Type (manual)
-  const el2 = await findElementWithFallback(page, ["#_r_m_","input[name=\"email\"]","input.css-lukafr"]);
-  await el2.fill(`tedwin.tan+qa3_1@kinesis.money`);
+  // Step 2: Click (manual)
+  await updateIndicator(page, `Running Step 2: Click`);
+  const el2 = await findElementWithFallback(page, ["#_r_d_","input[name=\"email\"]","input.css-lukafr"]);
+  await el2.click();
 
-  // Step 3: Type (manual)
-  const el3 = await findElementWithFallback(page, ["#_r_n_","input[name=\"password\"]","input.css-69tkhw"]);
-  await el3.fill(`Ttd@11190`);
+  // Step 3: Input (manual)
+  await updateIndicator(page, `Running Step 3: Input`);
+  const el3 = await findElementWithFallback(page, ["#_r_d_","input[name=\"email\"]","input.css-lukafr"]);
+  await el3.click();
+  await el3.fill('');
+  await page.keyboard.type(`tedwin.tan+qa3_1@kinesis.money`, { delay: 50 });
 
-  // Step 4: Click (manual)
-  const el4 = await findElementWithFallback(page, ["[data-cy=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
+  // Step 4: Input (manual)
+  await updateIndicator(page, `Running Step 4: Input`);
+  const el4 = await findElementWithFallback(page, ["#_r_e_","input[name=\"password\"]","input.css-69tkhw"]);
   await el4.click();
+  await el4.fill('');
+  await page.keyboard.type(`Ttd@11190`, { delay: 50 });
 
-  // Step 5: Javascript (manual)
+  // Step 5: Click (manual)
+  await updateIndicator(page, `Running Step 5: Click`);
+  const el5 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
+  await el5.click();
+
+  // Step 6: Javascript (manual)
+  await updateIndicator(page, `Running Step 6: Javascript`);
   process.env['2FA_Code'] = await page.evaluate(async () => {
     const secret = "FEYTMWZDOBJD6VRUEVOS6ZRDMJUEOZLMKJRUESR6KRCU6RDXGF4A";
     
@@ -157,15 +179,15 @@ test('test run from playwright recorder', async ({ page }) => {
         return otp;
   });
 
-  // Step 6: Wait (manual)
+  // Step 7: Wait (manual)
+  await updateIndicator(page, `Running Step 7: Wait`);
   await page.waitForTimeout(5000);
 
-  // Step 7: Click (manual)
-  const el7 = await findElementWithFallback(page, ["#_r_p_","input.css-cpz9ua",".css-cpz9ua"]);
-  await el7.click();
-
-  // Step 8: Type (manual)
-  const el8 = await findElementWithFallback(page, ["#_r_p_","input.css-cpz9ua",".css-cpz9ua"]);
-  await el8.fill(`${process.env['2FA_Code']}`);
+  // Step 8: Input (manual)
+  await updateIndicator(page, `Running Step 8: Input`);
+  const el8 = await findElementWithFallback(page, ["#_r_10_","input.css-cpz9ua",".css-cpz9ua"]);
+  await el8.click();
+  await el8.fill('');
+  await page.keyboard.type(`${process.env['2FA_Code']}`, { delay: 50 });
 
 });

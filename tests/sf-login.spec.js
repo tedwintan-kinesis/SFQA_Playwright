@@ -1,5 +1,5 @@
-// @zephyrId SFT-T501
-// @startUrl https://qa3-kms.kinesis.money/login
+// @zephyrId SFT-T510
+// @startUrl kinesismoney--uat2022.sandbox.lightning.force.com/lightning/page/home
 
 const { test, expect } = require('@playwright/test');
 
@@ -89,7 +89,7 @@ async function findElementWithFallback(page, selectors) {
   return page.locator(stable || selectors[0] || 'body');
 }
 
-test('Test Run 1', async ({ page }) => {
+test('SF Login', async ({ page }) => {
   // Position window on left half via CDP
   const cdp = await page.context().newCDPSession(page);
   const { windowId } = await cdp.send('Browser.getWindowForTarget');
@@ -100,8 +100,20 @@ test('Test Run 1', async ({ page }) => {
 
 
   // Step 1: Navigate (manual)
-  await page.goto(`https://qa3-kms.kinesis.money/login`);
+  await page.goto(`https://kinesismoney--uat2022.sandbox.my.salesforce.com/_ui/identity/verification/method/LLVerificationFinishUi/e?tck=837aa505-9ff7-455e-874a-df70cc0741a4&vcsrf=kSE8Rs4M81kcZFXOF7hESue5UQYIsDucOma35E_TC_wvo2V3KRIsIQT0BKgoeoVji1dgNgxLXAJTQz74larRQyv3Nm79dMkzFc68M_Ljd2H7QZjRslyPEmMS5yMC7GB2T23wzB8f8KbqNmCVt2iLCfiCf4_kcYXVnI7Tm21Dt1QoSLowVfLFa8C2d4ydJ7smum8bxJhw7XRC0RFFJw4JHAJWLc04feb-9faKgCIA6GauRrsX747qbrC_tvcJJYOB6ERB7tqEZHKxfgBA7MyXUWOEL--j7IznvaoKWYQ_14UuDezWBdIP9JhpdmZtfD83E7KYXdDraZjhdEsMsFTpBrs0Hke14xu9AixITsWa2ZXC7vvqcF1JtusiMP4MpvPpUzKSYFBo_XE9NBJR763Ky2YuXO3euU35uVtuwltfYy1_zjTB_84Lk8UyVsdO6TMPi0nlOhJqvnsaxG0XluExAQzjviB_RkjvM-0goNAO1vYGWMfxS-5eqPTsQfzVIGCwAmFsTxkOzVgHEU5DA14huP46GwZ1fLu2hWUjDWq5ziS2Qay2KzlWmnLDNoHuOLYkNR-PVhXDvd2mTC0CuEV1_Ae0ItRDx8DiSqZ_1xDPCZkFd8Os5qjBBFNxDTvIrwihxy0U5ljCG2hU5OYzlzlSIckHDFRbZHphMkC5eUkAVA8%3D&vpol=ll&vflid=0&vfgrp=2131952913&retURL=%2Fsecur%2Ffrontdoor.jsp%3Fallp%3D1%26retURL%3D%252Fvisualforce%252Fsession%253Furl%253Dhttps%25253A%25252F%25252Fkinesismoney--uat2022.sandbox.lightning.force.com%25252Flightning%25252Fpage%25252Fhome%26cshc%3Dg00000T24TSO0000008lYi%26apv%3D1%26display%3Dpage%26appkp%3D1%26ucs%3D1`);
   await showAutomationIndicator(page);
   await updateIndicator(page, `Running Step 1: Navigate`);
+
+  // Step 2: Input (manual)
+  await updateIndicator(page, `Running Step 2: Input`);
+  const el2 = await findElementWithFallback(page, ["#username","input[name=\"username\"]","input.input.wide.mb16.mt8.username"]);
+  await el2.click();
+  await el2.fill('');
+  await page.keyboard.type(`tedwin.tan@kinesis.money.uat2022`, { delay: 50 });
+
+  // Step 3: Click (manual)
+  await updateIndicator(page, `Running Step 3: Click`);
+  const el3 = await findElementWithFallback(page, ["#Login","input[name=\"Login\"]","input.button.wide.primary"]);
+  await el3.click();
 
 });

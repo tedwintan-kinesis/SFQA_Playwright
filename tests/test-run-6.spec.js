@@ -30,6 +30,7 @@ async function showAutomationIndicator(page) {
     ].join(';');
 
     const text = document.createElement('span');
+    text.id = 'sfqa-indicator-text';
     text.textContent = '"SFQA Reflect" Automation Testing started debugging this browser';
     text.style.cssText = 'font-weight:600';
 
@@ -66,44 +67,64 @@ async function showAutomationIndicator(page) {
   }).catch(() => {});
 }
 
+async function updateIndicator(page, text) {
+  await page.evaluate((t) => {
+    const span = document.getElementById('sfqa-indicator-text');
+    if (span) span.textContent = t;
+  }, text).catch(() => {});
+}
+
 async function findElementWithFallback(page, selectors) {
-  // Try each selector with a short wait
+  // Instantly pick first visible selector — Playwright auto-wait on action handles the rest
   for (const sel of selectors) {
     if (!sel) continue;
     try {
-      const locator = page.locator(sel).first();
-      await locator.waitFor({ state: 'visible', timeout: 3000 });
-      return locator;
+      if (await page.locator(sel).first().isVisible()) {
+        return page.locator(sel).first();
+      }
     } catch (e) {}
   }
-  // Last resort: use first stable (non-dynamic) selector
+  // Last resort: stable selector
   const stable = selectors.find(s => s && !s.startsWith('#_r_'));
   return page.locator(stable || selectors[0] || 'body');
 }
 
 test('Test run 6', async ({ page }) => {
-  await page.goto('https://qa6-kms.kinesis.money/login');
-  await page.waitForLoadState('networkidle');
-  await showAutomationIndicator(page);
+  // Position window on left half via CDP
+  const cdp = await page.context().newCDPSession(page);
+  const { windowId } = await cdp.send('Browser.getWindowForTarget');
+  const screen = await page.evaluate(() => ({ width: window.screen.availWidth, height: window.screen.availHeight }));
+  await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal', left: 0, top: 0, width: Math.floor(screen.width / 2), height: screen.height } });
+  await cdp.send('Page.enable');
+  page.on('console', msg => console.log('[BROWSER]', msg.type(), msg.text()));
+
 
   // Step 1: Navigate (manual)
-  await page.goto('https://qa6-kms.kinesis.money/home');
-  await page.waitForLoadState('networkidle');
+  await page.goto(`https://qa6-kms.kinesis.money/home`);
   await showAutomationIndicator(page);
+  await updateIndicator(page, `Running Step 1: Navigate`);
 
-  // Step 2: Type (manual)
+  // Step 2: Input (manual)
+  await updateIndicator(page, `Running Step 2: Input`);
   const el2 = await findElementWithFallback(page, ["#_r_j_","input[name=\"email\"]","input.css-lukafr"]);
-  await el2.fill('fatin.nadhirah+qa6.71@abx.com');
+  await el2.click();
+  await el2.fill('');
+  await page.keyboard.type(`fatin.nadhirah+qa6.71@abx.com`, { delay: 50 });
 
-  // Step 3: Type (manual)
+  // Step 3: Input (manual)
+  await updateIndicator(page, `Running Step 3: Input`);
   const el3 = await findElementWithFallback(page, ["#_r_k_","input[name=\"password\"]","input.css-69tkhw"]);
-  await el3.fill('Test123$');
+  await el3.click();
+  await el3.fill('');
+  await page.keyboard.type(`Test123$`, { delay: 50 });
 
   // Step 4: Click (manual)
+  await updateIndicator(page, `Running Step 4: Click`);
   const el4 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
   await el4.click();
 
   // Step 5: Wait (manual)
+  await updateIndicator(page, `Running Step 5: Wait`);
   await page.waitForTimeout(5000);
 
 });

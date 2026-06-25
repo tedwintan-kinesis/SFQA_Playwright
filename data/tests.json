@@ -1,106 +1,5 @@
 [
   {
-    "id": "test-82744b3e",
-    "name": "test run from playwright recorder",
-    "url": "https://qa3-kms.kinesis.money/home",
-    "zephyrId": "",
-    "suite": "All Tests",
-    "specFile": "tests/test-run-from-playwright-recorder.spec.js",
-    "type": "Web (Desktop)",
-    "status": "passed",
-    "lastRun": "2026-06-24T01:32:59.883Z",
-    "created": "2026-06-22T10:57:02.016Z",
-    "steps": [
-      {
-        "id": "step-1782125820207",
-        "action": "Navigate",
-        "selectorType": "manual",
-        "fallbacks": [],
-        "value": "https://qa3-kms.kinesis.money/login"
-      },
-      {
-        "id": "step-1782276565347",
-        "action": "Type",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#_r_m_",
-          "input[name=\"email\"]",
-          "input.css-lukafr"
-        ],
-        "value": "tedwin.tan+qa3_1@kinesis.money"
-      },
-      {
-        "id": "step-1782276565350",
-        "action": "Type",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#_r_n_",
-          "input[name=\"password\"]",
-          "input.css-69tkhw"
-        ],
-        "value": "Ttd@11190"
-      },
-      {
-        "id": "step-1782276565855",
-        "action": "Click",
-        "selectorType": "manual",
-        "fallbacks": [
-          "[data-cy=\"continue-with-email\"]",
-          "[data-qa=\"continue-with-email\"]",
-          "[data-cy=\"continue-with-email\"]"
-        ],
-        "value": ""
-      },
-      {
-        "id": "step-1782278891839",
-        "action": "Javascript",
-        "selectorType": "manual",
-        "variableId": "",
-        "fallbacks": [
-          "",
-          "",
-          ""
-        ],
-        "value": "const secret = \"FEYTMWZDOBJD6VRUEVOS6ZRDMJUEOZLMKJRUESR6KRCU6RDXGF4A\";\n\n    // 1. Base32 Decoding logic\n    const decoding = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\";\n    let hex = \"\";\n    for (let i = 0; i < secret.length; i++) {\n        const val = decoding.indexOf(secret.charAt(i).toUpperCase());\n        let bits = val.toString(2);\n        while (bits.length < 5) bits = \"0\" + bits;\n        hex += bits;\n    }\n    while (hex.length % 8 !== 0) hex += \"0\";\n    const bin = [];\n    for (let i = 0; i < hex.length; i += 8) {\n        bin.push(parseInt(hex.substr(i, 8), 2));\n    }\n\n    // 2. Math & Time window calculations\n    const epoch = Math.round(new Date().getTime() / 1000.0);\n    let time = Math.floor(epoch / 30);\n\n    const msg = new Uint8Array(8);\n    for (let i = 7; i >= 0; i--) {\n        msg[i] = time & 0xff;\n        time >>= 8;\n    }\n\n    // 3. Cryptography steps to build the security key\n    const key = new Uint8Array(bin);\n    const cryptoKey = await crypto.subtle.importKey(\n        \"raw\", key, { name: \"HMAC\", hash: \"SHA-1\" }, false, [\"sign\"]\n    );\n    const signature = await crypto.subtle.sign(\"HMAC\", cryptoKey, msg);\n    const hash = new Uint8Array(signature);\n\n    const offset = hash[hash.length - 1] & 0xf;\n    const binary = ((hash[offset] & 0x7f) << 24) |\n        ((hash[offset + 1] & 0xff) << 16) |\n        ((hash[offset + 2] & 0xff) << 8) |\n        (hash[offset + 3] & 0xff);\n\n    // 4. Generate the final 6-digit code\n    const otp = (binary % 1000000).toString().padStart(6, \"0\");\n\n    // 5. Return the result\n    return otp;",
-        "storeVariable": "2FA_Code"
-      },
-      {
-        "id": "step-1782279970237",
-        "action": "Wait",
-        "selectorType": "manual",
-        "variableId": "",
-        "fallbacks": [
-          "",
-          "",
-          ""
-        ],
-        "value": "5000"
-      },
-      {
-        "id": "step-1782293522158",
-        "action": "Click",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#_r_p_",
-          "input.css-cpz9ua",
-          ".css-cpz9ua"
-        ],
-        "value": ""
-      },
-      {
-        "id": "step-1782293531665",
-        "action": "Type",
-        "selectorType": "manual",
-        "fallbacks": [
-          "#_r_p_",
-          "input.css-cpz9ua",
-          ".css-cpz9ua"
-        ],
-        "value": "{{2FA_Code}}"
-      }
-    ]
-  },
-  {
     "id": "SFT-T500",
     "name": "Test Run 7",
     "url": "https://qa3-kms.kinesis.money/login",
@@ -205,6 +104,150 @@
           ""
         ],
         "value": "5000"
+      }
+    ]
+  },
+  {
+    "id": "SFT-T510",
+    "name": "SF Login",
+    "url": "kinesismoney--uat2022.sandbox.lightning.force.com/lightning/page/home",
+    "zephyrId": "SFT-T510",
+    "suite": "All Tests",
+    "specFile": "tests/sf-login.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-25T06:37:22.001Z",
+    "steps": [
+      {
+        "id": "step-1782369441959",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://kinesismoney--uat2022.sandbox.my.salesforce.com/_ui/identity/verification/method/LLVerificationFinishUi/e?tck=837aa505-9ff7-455e-874a-df70cc0741a4&vcsrf=kSE8Rs4M81kcZFXOF7hESue5UQYIsDucOma35E_TC_wvo2V3KRIsIQT0BKgoeoVji1dgNgxLXAJTQz74larRQyv3Nm79dMkzFc68M_Ljd2H7QZjRslyPEmMS5yMC7GB2T23wzB8f8KbqNmCVt2iLCfiCf4_kcYXVnI7Tm21Dt1QoSLowVfLFa8C2d4ydJ7smum8bxJhw7XRC0RFFJw4JHAJWLc04feb-9faKgCIA6GauRrsX747qbrC_tvcJJYOB6ERB7tqEZHKxfgBA7MyXUWOEL--j7IznvaoKWYQ_14UuDezWBdIP9JhpdmZtfD83E7KYXdDraZjhdEsMsFTpBrs0Hke14xu9AixITsWa2ZXC7vvqcF1JtusiMP4MpvPpUzKSYFBo_XE9NBJR763Ky2YuXO3euU35uVtuwltfYy1_zjTB_84Lk8UyVsdO6TMPi0nlOhJqvnsaxG0XluExAQzjviB_RkjvM-0goNAO1vYGWMfxS-5eqPTsQfzVIGCwAmFsTxkOzVgHEU5DA14huP46GwZ1fLu2hWUjDWq5ziS2Qay2KzlWmnLDNoHuOLYkNR-PVhXDvd2mTC0CuEV1_Ae0ItRDx8DiSqZ_1xDPCZkFd8Os5qjBBFNxDTvIrwihxy0U5ljCG2hU5OYzlzlSIckHDFRbZHphMkC5eUkAVA8%3D&vpol=ll&vflid=0&vfgrp=2131952913&retURL=%2Fsecur%2Ffrontdoor.jsp%3Fallp%3D1%26retURL%3D%252Fvisualforce%252Fsession%253Furl%253Dhttps%25253A%25252F%25252Fkinesismoney--uat2022.sandbox.lightning.force.com%25252Flightning%25252Fpage%25252Fhome%26cshc%3Dg00000T24TSO0000008lYi%26apv%3D1%26display%3Dpage%26appkp%3D1%26ucs%3D1"
+      },
+      {
+        "id": "step-1782369541854",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#username",
+          "input[name=\"username\"]",
+          "input.input.wide.mb16.mt8.username"
+        ],
+        "value": "tedwin.tan@kinesis.money.uat2022"
+      },
+      {
+        "id": "step-1782369541898",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#Login",
+          "input[name=\"Login\"]",
+          "input.button.wide.primary"
+        ],
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "SFT-T511",
+    "name": "Test KMS Login",
+    "url": "https://qa3-kms.kinesis.money/login",
+    "zephyrId": "SFT-T511",
+    "suite": "All Tests",
+    "specFile": "tests/test-kms-login.spec.js",
+    "type": "Web (Desktop)",
+    "status": "idle",
+    "lastRun": null,
+    "created": "2026-06-25T06:46:17.234Z",
+    "steps": [
+      {
+        "id": "step-1782369977212",
+        "action": "Navigate",
+        "selectorType": "manual",
+        "fallbacks": [],
+        "value": "https://qa3-kms.kinesis.money/login"
+      },
+      {
+        "id": "step-1782370000764",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_d_",
+          "input[name=\"email\"]",
+          "input.css-lukafr"
+        ],
+        "value": ""
+      },
+      {
+        "id": "step-1782370001725",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_d_",
+          "input[name=\"email\"]",
+          "input.css-lukafr"
+        ],
+        "value": "tedwin.tan+qa3_1@kinesis.money"
+      },
+      {
+        "id": "step-1782370001729",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_e_",
+          "input[name=\"password\"]",
+          "input.css-69tkhw"
+        ],
+        "value": "Ttd@11190"
+      },
+      {
+        "id": "step-1782370005339",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "[data-testid=\"continue-with-email\"]",
+          "[data-qa=\"continue-with-email\"]",
+          "[data-cy=\"continue-with-email\"]"
+        ],
+        "value": ""
+      },
+      {
+        "id": "step-1782371876769",
+        "action": "Javascript",
+        "selectorType": "manual",
+        "variableId": "",
+        "fallbacks": [
+          "",
+          "",
+          ""
+        ],
+        "value": "const secret = \"FEYTMWZDOBJD6VRUEVOS6ZRDMJUEOZLMKJRUESR6KRCU6RDXGF4A\";\n\n    // 1. Base32 Decoding logic\n    const decoding = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\";\n    let hex = \"\";\n    for (let i = 0; i < secret.length; i++) {\n        const val = decoding.indexOf(secret.charAt(i).toUpperCase());\n        let bits = val.toString(2);\n        while (bits.length < 5) bits = \"0\" + bits;\n        hex += bits;\n    }\n    while (hex.length % 8 !== 0) hex += \"0\";\n    const bin = [];\n    for (let i = 0; i < hex.length; i += 8) {\n        bin.push(parseInt(hex.substr(i, 8), 2));\n    }\n\n    // 2. Math & Time window calculations\n    const epoch = Math.round(new Date().getTime() / 1000.0);\n    let time = Math.floor(epoch / 30);\n\n    const msg = new Uint8Array(8);\n    for (let i = 7; i >= 0; i--) {\n        msg[i] = time & 0xff;\n        time >>= 8;\n    }\n\n    // 3. Cryptography steps to build the security key\n    const key = new Uint8Array(bin);\n    const cryptoKey = await crypto.subtle.importKey(\n        \"raw\", key, { name: \"HMAC\", hash: \"SHA-1\" }, false, [\"sign\"]\n    );\n    const signature = await crypto.subtle.sign(\"HMAC\", cryptoKey, msg);\n    const hash = new Uint8Array(signature);\n\n    const offset = hash[hash.length - 1] & 0xf;\n    const binary = ((hash[offset] & 0x7f) << 24) |\n        ((hash[offset + 1] & 0xff) << 16) |\n        ((hash[offset + 2] & 0xff) << 8) |\n        (hash[offset + 3] & 0xff);\n\n    // 4. Generate the final 6-digit code\n    const otp = (binary % 1000000).toString().padStart(6, \"0\");\n\n    // 5. Return the result\n    return otp;",
+        "storeVariable": "2FA_Code"
+      },
+      {
+        "id": "step-1782371944169",
+        "action": "Wait",
+        "selectorType": "manual",
+        "variableId": "",
+        "fallbacks": [
+          "",
+          "",
+          ""
+        ],
+        "value": "5000"
+      },
+      {
+        "id": "step-1782372683569",
+        "action": "Type",
+        "selectorType": "manual",
+        "fallbacks": [
+          "#_r_10_",
+          "input.css-cpz9ua",
+          ".css-cpz9ua"
+        ],
+        "value": "{{2FA_Code}}"
       }
     ]
   }

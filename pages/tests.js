@@ -206,7 +206,7 @@ export default function TestsPage() {
       const fn = new AsyncFunction(code);
       const result = await fn();
       if (result !== undefined) {
-        alert('Script returned:\n\n' + (typeof result === 'object' ? JSON.stringify(result, null, 2) : result));
+        alert(typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result));
       } else {
         alert('Script executed successfully (no return value).');
       }

@@ -1,66 +1,72 @@
-function injectIndicator(tabId) {
-  chrome.scripting.executeScript({
+function injectIndicator(tabId, initialText = '"SFQA Reflect" Automation Testing started debugging this browser') {
+  return chrome.scripting.executeScript({
     target: { tabId },
-    func: () => {
+    func: (txt) => {
       const id = 'sfqa-recording-indicator';
-      if (document.getElementById(id)) return;
+      let bar = document.getElementById(id);
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = id;
+        bar.style.cssText = [
+          'position:fixed',
+          'top:0',
+          'left:0',
+          'right:0',
+          'z-index:2147483647',
+          'height:56px',
+          'display:flex',
+          'align-items:center',
+          'gap:16px',
+          'padding:0 18px',
+          'box-sizing:border-box',
+          'background:#2f1f46',
+          'color:#ffffff',
+          'font:14px Arial,sans-serif',
+          'box-shadow:0 2px 10px rgba(0,0,0,0.18)',
+          'user-select:none'
+        ].join(';');
 
-      const bar = document.createElement('div');
-      bar.id = id;
-      bar.style.cssText = [
-        'position:fixed',
-        'top:0',
-        'left:0',
-        'right:0',
-        'z-index:2147483647',
-        'height:56px',
-        'display:flex',
-        'align-items:center',
-        'gap:16px',
-        'padding:0 18px',
-        'box-sizing:border-box',
-        'background:#2f1f46',
-        'color:#ffffff',
-        'font:14px Arial,sans-serif',
-        'box-shadow:0 2px 10px rgba(0,0,0,0.18)',
-        'user-select:none'
-      ].join(';');
+        const text = document.createElement('span');
+        text.id = 'sfqa-indicator-text';
+        text.textContent = txt;
+        text.style.cssText = 'font-weight:600;flex:1';
 
-      const text = document.createElement('span');
-      text.textContent = '"SFQA Reflect" Automation Testing started debugging this browser';
-      text.style.cssText = 'font-weight:600;flex:1';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Cancel';
+        button.style.cssText = [
+          'border:0',
+          'border-radius:18px',
+          'padding:9px 18px',
+          'background:#c7c2ff',
+          'color:#170f29',
+          'font:600 13px Arial,sans-serif',
+          'cursor:pointer'
+        ].join(';');
+        button.addEventListener('click', () => bar.remove());
 
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = 'Cancel';
-      button.style.cssText = [
-        'border:0',
-        'border-radius:18px',
-        'padding:9px 18px',
-        'background:#c7c2ff',
-        'color:#170f29',
-        'font:600 13px Arial,sans-serif',
-        'cursor:pointer'
-      ].join(';');
-      button.addEventListener('click', () => bar.remove());
+        const closeBtn = document.createElement('span');
+        closeBtn.textContent = '✕';
+        closeBtn.style.cssText = [
+          'margin-left:auto',
+          'cursor:pointer',
+          'font-size:18px',
+          'opacity:0.85',
+          'user-select:none',
+          'padding:4px 8px'
+        ].join(';');
+        closeBtn.addEventListener('click', () => bar.remove());
 
-      const closeBtn = document.createElement('span');
-      closeBtn.textContent = '✕';
-      closeBtn.style.cssText = [
-        'margin-left:auto',
-        'cursor:pointer',
-        'font-size:18px',
-        'opacity:0.85',
-        'user-select:none',
-        'padding:4px 8px'
-      ].join(';');
-      closeBtn.addEventListener('click', () => bar.remove());
-
-      bar.appendChild(text);
-      bar.appendChild(button);
-      bar.appendChild(closeBtn);
-      document.documentElement.appendChild(bar);
-    }
+        bar.appendChild(text);
+        bar.appendChild(button);
+        bar.appendChild(closeBtn);
+        document.documentElement.appendChild(bar);
+      } else {
+        const span = document.getElementById('sfqa-indicator-text');
+        if (span) span.textContent = txt;
+      }
+    },
+    args: [initialText]
   }).catch(() => {});
 }
 
@@ -75,12 +81,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       payload: { type: "info", line: `[Extension] Starting run for: ${test.name}` }
     });
 
-    chrome.windows.create({ url: test.url, incognito: true }, (win) => {
+    chrome.windows.create({ url: test.url, incognito: true, left: 0, top: 0, width: 900, height: 1080 }, (win) => {
       chrome.tabs.query({ windowId: win.id }, (tabs) => {
         if (!tabs || tabs.length === 0) return;
         const runTabId = tabs[0].id;
         
         let currentStepIdx = 0;
+        const sfqaEnv = {};
         
         const executeNextStep = () => {
           if (currentStepIdx >= test.steps.length) {
@@ -96,6 +103,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
           
           const step = test.steps[currentStepIdx];
+          const displayAction = step.action === 'Type' ? 'Input' : (step.action || 'Action');
+          const stepText = `Running Step ${currentStepIdx + 1}: ${displayAction}`;
+          injectIndicator(runTabId, stepText);
+
           chrome.tabs.sendMessage(dashboardTabId, {
             action: "RUN_LOG",
             payload: { type: "log", line: `  - Executing step ${currentStepIdx + 1}: ${step.action} ${step.value || ''}` }
@@ -118,6 +129,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
 
+          let processedStep = JSON.parse(JSON.stringify(step));
+          if (processedStep.value && typeof processedStep.value === 'string') {
+            processedStep.value = processedStep.value.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+              return sfqaEnv[key.trim()] || '';
+            });
+          }
+
           // Inject content_runner.js if not present, then execute step
           chrome.scripting.executeScript({
             target: { tabId: runTabId },
@@ -127,10 +145,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return chrome.scripting.executeScript({
               target: { tabId: runTabId },
               func: (stepData) => window.sfqaRunStep(stepData),
-              args: [step],
+              args: [processedStep],
               world: 'MAIN'
             });
           }).then((results) => {
+            const res = results[0]?.result;
+            if (res && res.storeVariable) {
+              sfqaEnv[res.storeVariable] = res.value;
+            }
             currentStepIdx++;
             executeNextStep();
           }).catch((err) => {
@@ -162,7 +184,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   } else if (message.action === "START_RECORDING") {
     const dashboardTabId = sender.tab.id;
-    chrome.windows.create({ url: message.url, incognito: true }, (win) => {
+    chrome.windows.create({ url: message.url, incognito: true, left: 0, top: 0, width: 900, height: 1080 }, (win) => {
       chrome.tabs.query({ windowId: win.id }, (tabs) => {
         if (!tabs || tabs.length === 0) return;
         const recordingTabId = tabs[0].id;
@@ -172,6 +194,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         if (stepsToRun.length > 0) {
           let currentStepIdx = 0;
+          const sfqaEnv = {};
           const executeNextStep = () => {
             if (currentStepIdx >= stepsToRun.length) {
               chrome.storage.session.set({ dashboardTabId, recordingTabId }, () => {
@@ -180,8 +203,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               return;
             }
             const step = stepsToRun[currentStepIdx];
+            const displayAction = step.action === 'Type' ? 'Input' : (step.action || 'Action');
+            const stepText = `Running Step ${currentStepIdx + 1}: ${displayAction}`;
+            injectIndicator(recordingTabId, stepText);
+
+            let processedStep = JSON.parse(JSON.stringify(step));
+            if (processedStep.value && typeof processedStep.value === 'string') {
+              processedStep.value = processedStep.value.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+                return sfqaEnv[key.trim()] || '';
+              });
+            }
+
             if (step.action === "Navigate") {
-              chrome.tabs.update(recordingTabId, { url: step.value }, () => {
+              chrome.tabs.update(recordingTabId, { url: processedStep.value }, () => {
                 const listener = (tid, info) => {
                   if (tid === recordingTabId && info.status === 'complete') {
                     chrome.tabs.onUpdated.removeListener(listener);
@@ -200,10 +234,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               return chrome.scripting.executeScript({
                 target: { tabId: recordingTabId },
                 func: (stepData) => window.sfqaRunStep(stepData),
-                args: [step],
+                args: [processedStep],
                 world: 'MAIN'
               });
-            }).then(() => {
+            }).then((results) => {
+              const res = results[0]?.result;
+              if (res && res.storeVariable) {
+                sfqaEnv[res.storeVariable] = res.value;
+              }
               currentStepIdx++;
               executeNextStep();
             }).catch(() => {

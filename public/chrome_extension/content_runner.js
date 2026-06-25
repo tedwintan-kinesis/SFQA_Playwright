@@ -73,9 +73,46 @@ window.sfqaRunStep = async function(step) {
       target.click();
       break;
     case "Type":
-      target.value = step.value;
+      target.focus();
+      // Use native setter to bypass React's wrapper
+      const proto = target.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+      const nativeSetter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+      
+      if (nativeSetter) {
+        nativeSetter.call(target, '');
+      } else {
+        target.value = '';
+      }
       target.dispatchEvent(new Event('input', { bubbles: true }));
-      target.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      let currentVal = '';
+      const textToType = step.value || '';
+      for (let i = 0; i < textToType.length; i++) {
+        await sleep(50);
+        const char = textToType[i];
+        
+        const active = document.activeElement || target;
+        const activeProto = active.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+        const activeSetter = Object.getOwnPropertyDescriptor(activeProto, "value")?.set;
+
+        active.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
+        active.dispatchEvent(new KeyboardEvent('keypress', { key: char, bubbles: true }));
+        
+        if (active !== target) {
+          // Focus moved to a new box (e.g. OTP), don't prepend old text
+          if (activeSetter) activeSetter.call(active, char);
+          else active.value = char;
+        } else {
+          currentVal += char;
+          if (activeSetter) activeSetter.call(active, currentVal);
+          else active.value = currentVal;
+        }
+        
+        active.dispatchEvent(new Event('input', { bubbles: true }));
+        active.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
+      }
+      if (document.activeElement) document.activeElement.dispatchEvent(new Event('change', { bubbles: true }));
+      else target.dispatchEvent(new Event('change', { bubbles: true }));
       break;
     case "Wait":
       await sleep(parseInt(step.value, 10) || 1000);
@@ -85,7 +122,10 @@ window.sfqaRunStep = async function(step) {
       try {
         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
         const fn = new AsyncFunction(step.value);
-        await fn();
+        const res = await fn();
+        if (step.storeVariable) {
+          return { storeVariable: step.storeVariable, value: res };
+        }
       } catch (e) {
         throw new Error(`Javascript error: ${e.message}`);
       }

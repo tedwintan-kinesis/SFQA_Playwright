@@ -27,7 +27,13 @@ module.exports = defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { channel: 'chrome' },
+      use: {
+        channel: 'chrome',
+        launchOptions: {
+          devtools: true,
+          args: ['--disable-extensions'],
+        },
+      },
     },
   ],
   outputDir: 'test-results/',
