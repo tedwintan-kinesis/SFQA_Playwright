@@ -167,7 +167,7 @@ export default function RunsPage() {
                     </td>
                     <td>
                       {run.zephyrId && run.zephyrId !== '-'
-                        ? <span className="pill pill-zephyr">{run.zephyrId}</span>
+                        ? <a href={`https://bullioncapital.atlassian.net/projects/SFT?selectedItem=com.atlassian.plugins.atlassian-connect-plugin:com.kanoah.test-manager__main-project-page#!/v2/testCase/${run.zephyrId}`} target="_blank" rel="noreferrer" className="pill pill-zephyr" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>{run.zephyrId}</a>
                         : <span style={{ color: 'var(--muted)' }}>-</span>}
                     </td>
                     <td>

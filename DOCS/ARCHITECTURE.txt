@@ -16,3 +16,14 @@ SFQA PLAYWRIGHT ARCHITECTURE
 2. Dashboard tells trigger-run.js to start.
 3. It spawns Playwright in background.
 4. Logs stream back to UI.
+
+4. FOLDER RESPONSIBILITIES
+- /pages: Next.js frontend pages (UI) and API routes (backend endpoints). Responsible for functions and javascript behaviors.
+- /public: Static assets (images, icons) and the Chrome extension source code.
+- /components: Reusable React UI components (like Modals).
+- /data: Stores JSON database files (e.g., tests.json, runs.json).
+- /lib: Core backend logic, utilities, and the Playwright code generator (dataStore.js).
+- /styles: Global CSS stylesheets.
+- /tests: Auto-generated Playwright test scripts (.spec.js files).
+- /test-results: Output folder for Playwright test results, traces, and reports.
+- /DOCS: Project documentation, standard operating procedures, and architecture notes.

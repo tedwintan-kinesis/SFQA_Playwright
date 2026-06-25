@@ -389,9 +389,12 @@ export default function TestsPage() {
       abortControllerRef.current.abort();
     }
     
+    // Only mark incomplete if run is still in progress (extRunIdRef cleared after done)
     if (extRunIdRef.current) {
+      const runIdToStop = extRunIdRef.current;
+      extRunIdRef.current = null; // clear immediately to prevent double-write
       try {
-        await fetch(`/api/runs/${extRunIdRef.current}`, {
+        await fetch(`/api/runs/${runIdToStop}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'incomplete' })
@@ -418,14 +421,22 @@ export default function TestsPage() {
           });
         } else if (event.data.action === "RUN_LOG") {
           const payload = event.data.payload;
+          // Check status lines BEFORE handling done (avoids race where done arrives before status line)
+          if (payload && payload.line) {
+            console.log(payload.line);
+            if (payload.line.includes('[Extension] Run finished: PASSED')) extRunStatusRef.current = 'passed';
+            if (payload.line.includes('[Extension] Run finished: FAILED')) extRunStatusRef.current = 'failed';
+          }
           if (payload && payload.type === 'done') {
              try {
                const status = extRunStatusRef.current || 'failed';
                const durationMs = extRunStartTimeRef.current ? Date.now() - extRunStartTimeRef.current : 0;
                const durationStr = `${Math.round(durationMs / 1000)}s`;
                const test = runningTestRef.current;
-               if (test && extRunIdRef.current) {
-                 await fetch(`/api/runs/${extRunIdRef.current}`, {
+               const runIdToFinish = extRunIdRef.current;
+               extRunIdRef.current = null; // clear BEFORE PUT so stopRun cannot override
+               if (test && runIdToFinish) {
+                 await fetch(`/api/runs/${runIdToFinish}`, {
                    method: 'PUT',
                    headers: { 'Content-Type': 'application/json' },
                    body: JSON.stringify({
@@ -440,10 +451,6 @@ export default function TestsPage() {
                alert('Extension Run Finished');
              } catch(e){}
              setRunning(false);
-          } else if (payload && payload.line) {
-            console.log(payload.line);
-            if (payload.line.includes('[Extension] Run finished: PASSED')) extRunStatusRef.current = 'passed';
-            if (payload.line.includes('[Extension] Run finished: FAILED')) extRunStatusRef.current = 'failed';
           }
         }
       }
@@ -566,6 +573,39 @@ export default function TestsPage() {
     await fetch(`/api/tests/${id}`, { method: 'DELETE' });
     setTests(prev => prev.filter(t => t.id !== id));
     setSelectedIds(prev => prev.filter(x => x !== id));
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`Delete ${selectedIds.length} test case${selectedIds.length !== 1 ? 's' : ''}?`)) return;
+    for (const id of selectedIds) {
+      await fetch(`/api/tests/${id}`, { method: 'DELETE' });
+    }
+    setTests(prev => prev.filter(t => !selectedIds.includes(t.id)));
+    setSelectedIds([]);
+  }
+
+  async function handleBulkDuplicate() {
+    for (const id of selectedIds) {
+      const existing = tests.find(t => t.id === id);
+      if (!existing) continue;
+      
+      const res = await fetch('/api/tests', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: existing.name + ' (Copy)',
+          url: existing.url,
+          zephyrId: existing.zephyrId || '',
+          suite: existing.suite,
+          specFile: existing.specFile || 'tests/Signup Flow/new-kms-signup.spec.js',
+          steps: existing.steps
+        }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setTests(prev => [...prev, created]);
+      }
+    }
+    setSelectedIds([]);
   }
 
   // Checkbox functions
@@ -804,8 +844,12 @@ export default function TestsPage() {
               ) : (
                 <div style={{ flex: 1 }}>
                   {selectedIds.length > 0 && (
-                    <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginBottom: 10 }}>
-                      Selected {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''}. Drag any row to move them.
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                      <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>
+                        &gt; {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''} selected
+                      </div>
+                      <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: 12 }} onClick={handleBulkDuplicate}>Duplicate</button>
+                      <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: 12, color: 'var(--danger-text, #dc3545)', borderColor: 'var(--danger-border, #dc3545)' }} onClick={handleBulkDelete}>Delete</button>
                     </div>
                   )}
                   <table className="data-table">
@@ -850,7 +894,7 @@ export default function TestsPage() {
                             <td><span className="pill pill-suite">{test.suite}</span></td>
                             <td>
                               {test.zephyrId && test.zephyrId !== '-'
-                                ? <a href={`https://bullioncapital.atlassian.net/projects/SFT?selectedItem=com.kanoah.test-manager__main-project-page#!/testCase/${test.zephyrId}`} target="_blank" rel="noreferrer" className="pill pill-zephyr" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>{test.zephyrId}</a>
+                                ? <a href={`https://bullioncapital.atlassian.net/projects/SFT?selectedItem=com.atlassian.plugins.atlassian-connect-plugin:com.kanoah.test-manager__main-project-page#!/v2/testCase/${test.zephyrId}`} target="_blank" rel="noreferrer" className="pill pill-zephyr" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>{test.zephyrId}</a>
                                 : <span style={{ color: 'var(--muted)', fontSize: 12 }}>-</span>}
                             </td>
                             <td>
