@@ -100,7 +100,7 @@ test('Test KMS Login', async ({ page }) => {
 
 
   // Step 1: Navigate (manual)
-  await page.goto(`https://qa3-kms.kinesis.money/login`);
+  await page.goto(`https://qa3-kms.kinesis.money/home`);
   await showAutomationIndicator(page);
   await updateIndicator(page, `Running Step 1: Navigate`);
 
@@ -189,5 +189,15 @@ test('Test KMS Login', async ({ page }) => {
   await el8.click();
   await el8.fill('');
   await page.keyboard.type(`${process.env['2FA_Code']}`, { delay: 50 });
+
+  // Step 9: Click (manual)
+  await updateIndicator(page, `Running Step 9: Click`);
+  const el9 = await findElementWithFallback(page, ["button:has-text(\"Close\")","text=\"Close\"","button.css-1003075"]);
+  await el9.click();
+
+  // Step 10: Assert Text (manual)
+  await updateIndicator(page, `Running Step 10: Assert Text`);
+  const el10 = await findElementWithFallback(page, ["span:has-text(\"Good evening, Ted qa three 👋\")","text=\"Good evening, Ted qa three 👋\"","span.css-zd5p3"]);
+  await expect(el10).toHaveText(`Good evening, Ted qa three`);
 
 });

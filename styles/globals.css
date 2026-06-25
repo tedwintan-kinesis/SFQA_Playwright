@@ -100,6 +100,7 @@ input, select, textarea { font-family: inherit; }
 .status-dot.passed  { background: var(--success); }
 .status-dot.failed  { background: var(--error); }
 .status-dot.running { background: var(--warning); animation: pulse 1s infinite; }
+.status-dot.incomplete { background: var(--muted); }
 .status-dot.idle    { background: var(--muted); }
 
 @keyframes pulse {

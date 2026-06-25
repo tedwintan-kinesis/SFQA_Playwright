@@ -82,6 +82,41 @@ export default function Readme() {
             </ul>
           </section>
 
+          {/* Features */}
+          <section style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: 'var(--shadow)', marginBottom: '24px', border: '1px solid var(--border)' }}>
+            <h2 style={{ fontSize: '18px', color: '#2D3748', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
+              3. Features
+            </h2>
+            <ul style={{ paddingLeft: '20px', margin: 0, color: '#4A5568', fontSize: '14px', lineHeight: '1.8' }}>
+              <li><strong>No-Code Recording:</strong> Create test steps simply by interacting with your application in the browser. No coding experience required.</li>
+              <li><strong>Auto Fallback:</strong> If the primary element (P1) fails to detect, it automatically falls back to secondary selectors (P2, P3, etc.).</li>
+              <li><strong>Auto Wait:</strong> The runner automatically waits for elements to appear before interacting.</li>
+              <li><strong>Zephyr Scale Integration:</strong> Sync tests and push execution results directly to Zephyr Scale automatically.</li>
+              <li><strong>Playwright Native:</strong> Tests are exported as standard Playwright <code>.spec.js</code> files. No vendor lock-in; developers can run them anywhere.</li>
+              <li><strong>Variable Injection:</strong> Use <code>{`{{VariableName}}`}</code> syntax to pass dynamic data or secrets to steps without hardcoding them.</li>
+              <li><strong>Drag & Drop Organization:</strong> Quickly organize tests into suites and folders using intuitive drag-and-drop.</li>
+              <li><strong>Visual Execution Indicator:</strong> A banner injects into the browser during runs, providing real-time visibility into which step is currently executing.</li>
+              <li><strong>Explicit Wait:</strong> Allows setting a hard pause/delay if needed.</li>
+              <li><strong>Javascript:</strong> Execute custom scripts directly in the browser context to bypass logic or fetch OTPs.</li>
+            </ul>
+          </section>
+
+          {/* Available Actions */}
+          <section style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: 'var(--shadow)', marginBottom: '24px', border: '1px solid var(--border)' }}>
+            <h2 style={{ fontSize: '18px', color: '#2D3748', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
+              4. Available Actions
+            </h2>
+            <ul style={{ paddingLeft: '20px', margin: 0, color: '#4A5568', fontSize: '14px', lineHeight: '1.8' }}>
+              <li><strong>Navigate:</strong> Opens a specific URL in the browser.</li>
+              <li><strong>Click:</strong> Simulates a user clicking on an element.</li>
+              <li><strong>Type:</strong> Simulates a user typing text into an input field.</li>
+              <li><strong>Wait:</strong> Pauses the test execution for a specified amount of time.</li>
+              <li><strong>Javascript:</strong> Runs custom JavaScript code.</li>
+              <li><strong>Assert Text:</strong> Checks if a specific text is present inside an element.</li>
+              <li><strong>Assert Visible:</strong> Checks to ensure that an element is currently visible.</li>
+            </ul>
+          </section>
+
         </div>
       </div>
     </>

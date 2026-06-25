@@ -1,27 +1,15 @@
 [
   {
-    "id": "run-2a012981",
-    "testId": "test-001",
-    "testName": "New KMS Signup to SF flow",
-    "zephyrId": "SFT-T74",
-    "zephyrCycle": "SFT-R79",
+    "id": "run-36878bff",
+    "testId": "SFT-T500",
+    "testName": "Test Run 7",
+    "zephyrId": "SFT-T500",
+    "zephyrCycle": "-",
     "status": "passed",
-    "mode": "local",
-    "duration": "8s",
-    "completedAt": "2026-06-22T01:22:51.759Z",
-    "triggeredBy": "dashboard"
-  },
-  {
-    "id": "run-001",
-    "testId": "test-001",
-    "testName": "New KMS Signup to SF flow",
-    "zephyrId": "SFT-T74",
-    "zephyrCycle": "SFT-R79",
-    "zephyrExecutionId": "2842982115",
-    "status": "passed",
-    "mode": "headless",
-    "duration": "68s",
-    "completedAt": "2026-06-20T15:26:42Z",
-    "triggeredBy": "terminal"
+    "mode": "extension",
+    "duration": "5s",
+    "triggeredBy": "dashboard",
+    "completedAt": "2026-06-25T14:49:33.369Z",
+    "zephyrExecutionId": "SFT-E520"
   }
 ]

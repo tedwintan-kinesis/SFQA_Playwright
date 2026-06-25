@@ -7,8 +7,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-run-7.spec.js",
     "type": "Web (Desktop)",
-    "status": "idle",
-    "lastRun": null,
+    "status": "passed",
+    "lastRun": "2026-06-25T14:49:33.369Z",
     "created": "2026-06-23T09:17:39.080Z",
     "steps": [
       {
@@ -158,8 +158,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-kms-login.spec.js",
     "type": "Web (Desktop)",
-    "status": "idle",
-    "lastRun": null,
+    "status": "failed",
+    "lastRun": "2026-06-25T14:49:23.505Z",
     "created": "2026-06-25T06:46:17.234Z",
     "steps": [
       {
@@ -167,7 +167,7 @@
         "action": "Navigate",
         "selectorType": "manual",
         "fallbacks": [],
-        "value": "https://qa3-kms.kinesis.money/login"
+        "value": "https://qa3-kms.kinesis.money/home"
       },
       {
         "id": "step-1782370000764",
@@ -248,6 +248,28 @@
           ".css-cpz9ua"
         ],
         "value": "{{2FA_Code}}"
+      },
+      {
+        "id": "step-1782386740525",
+        "action": "Click",
+        "selectorType": "manual",
+        "fallbacks": [
+          "button:has-text(\"Close\")",
+          "text=\"Close\"",
+          "button.css-1003075"
+        ],
+        "value": ""
+      },
+      {
+        "id": "step-1782386752144",
+        "action": "Assert Text",
+        "selectorType": "manual",
+        "fallbacks": [
+          "span:has-text(\"Good evening, Ted qa three 👋\")",
+          "text=\"Good evening, Ted qa three 👋\"",
+          "span.css-zd5p3"
+        ],
+        "value": "Good evening, Ted qa three"
       }
     ]
   }

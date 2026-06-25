@@ -1,7 +1,7 @@
 // content_runner.js
 // Injected by background.js to execute a single step in the DOM
 
-window.sfqaRunStep = async function(step) {
+window.sfqaRunStep = async function(step, timeoutSec = 30) {
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   
   function findElement(fallbacks) {
@@ -58,7 +58,8 @@ window.sfqaRunStep = async function(step) {
   // Wait for element to appear (skip for Wait/Javascript)
   let target = null;
   if (step.action !== "Wait" && step.action !== "Javascript" && step.action !== "Execute JS") {
-    for (let i = 0; i < 30; i++) {
+    const maxIters = (timeoutSec * 1000) / 200;
+    for (let i = 0; i < maxIters; i++) {
       target = findElement(step.fallbacks || []);
       if (target) break;
       await sleep(200);

@@ -81,7 +81,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       payload: { type: "info", line: `[Extension] Starting run for: ${test.name}` }
     });
 
-    chrome.windows.create({ url: test.url, incognito: true, left: 0, top: 0, width: 900, height: 1080 }, (win) => {
+    const config = message.config || { incognito: false, timeout: 30 };
+
+    chrome.windows.create({ url: test.url, incognito: config.incognito, left: 0, top: 0, width: 900, height: 1080 }, (win) => {
       chrome.tabs.query({ windowId: win.id }, (tabs) => {
         if (!tabs || tabs.length === 0) return;
         const runTabId = tabs[0].id;
@@ -144,8 +146,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }).then(() => {
             return chrome.scripting.executeScript({
               target: { tabId: runTabId },
-              func: (stepData) => window.sfqaRunStep(stepData),
-              args: [processedStep],
+              func: (stepData, timeoutSec) => window.sfqaRunStep(stepData, timeoutSec),
+              args: [processedStep, config.timeout],
               world: 'MAIN'
             });
           }).then((results) => {
@@ -184,7 +186,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   } else if (message.action === "START_RECORDING") {
     const dashboardTabId = sender.tab.id;
-    chrome.windows.create({ url: message.url, incognito: true, left: 0, top: 0, width: 900, height: 1080 }, (win) => {
+    const config = message.config || { incognito: false, timeout: 30 };
+    chrome.windows.create({ url: message.url, incognito: config.incognito, left: 0, top: 0, width: 900, height: 1080 }, (win) => {
       chrome.tabs.query({ windowId: win.id }, (tabs) => {
         if (!tabs || tabs.length === 0) return;
         const recordingTabId = tabs[0].id;
@@ -233,8 +236,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }).then(() => {
               return chrome.scripting.executeScript({
                 target: { tabId: recordingTabId },
-                func: (stepData) => window.sfqaRunStep(stepData),
-                args: [processedStep],
+                func: (stepData, timeoutSec) => window.sfqaRunStep(stepData, timeoutSec),
+                args: [processedStep, config.timeout],
                 world: 'MAIN'
               });
             }).then((results) => {

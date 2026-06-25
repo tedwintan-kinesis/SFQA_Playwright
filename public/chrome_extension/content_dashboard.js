@@ -5,7 +5,16 @@ document.documentElement.setAttribute('data-sfqa-extension-active', 'true');
 window.addEventListener("message", (event) => {
   if (event.source !== window) return;
   if (event.data && event.data.source === "sfqa-dashboard") {
-    chrome.runtime.sendMessage(event.data);
+    try {
+      if (chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage(event.data);
+      } else {
+        throw new Error("Extension context invalidated");
+      }
+    } catch (e) {
+      console.error("SFQA Extension Error:", e);
+      alert("The SFQA extension was reloaded or updated. Please refresh this page to reconnect.");
+    }
   }
 });
 

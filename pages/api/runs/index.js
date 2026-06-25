@@ -4,7 +4,8 @@ import { v4 as uuid } from 'uuid';
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      return res.status(200).json(readRuns());
+      const runs = await readRuns();
+      return res.status(200).json(runs);
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
@@ -12,7 +13,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const runs = readRuns();
+      const runs = await readRuns();
       const newRun = {
         id: `run-${uuid().split('-')[0]}`,
         ...req.body,

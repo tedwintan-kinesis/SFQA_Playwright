@@ -149,3 +149,31 @@ document.addEventListener('change', (event) => {
     }
   }
 }, true);
+
+// Selection (Highlight) recorder
+document.addEventListener('mouseup', (event) => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+  const text = selection.toString().trim();
+  if (text.length > 0) {
+    let target = selection.anchorNode;
+    if (target && target.nodeType === Node.TEXT_NODE) {
+      target = target.parentElement;
+    }
+    if (!target) return;
+    
+    // Only record if selection was actually made during this mouseup
+    // A simple check is to ensure text is selected
+    const fallbacks = getSelectors(target);
+    chrome.runtime.sendMessage({
+      action: "RECORD_STEP",
+      step: {
+        id: `step-${Date.now()}`,
+        action: "Assert Text",
+        selectorType: "manual",
+        fallbacks,
+        value: text
+      }
+    });
+  }
+}, true);

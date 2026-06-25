@@ -10,9 +10,14 @@ export default function TestsPage() {
   const [filter, setFilter] = useState('all');
   const [activeSuite, setActiveSuite] = useState('All Tests');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: 'created', direction: 'desc' });
   const [dragOverFolder, setDragOverFolder] = useState(null);
   const [draggedIds, setDraggedIds] = useState([]);
   const abortControllerRef = useRef(null);
+  const runningTestRef = useRef(null);
+  const extRunStatusRef = useRef(null);
+  const extRunStartTimeRef = useRef(null);
+  const extRunIdRef = useRef(null);
 
   // Test creation modal state
   const [showModal, setShowModal] = useState(false);
@@ -219,12 +224,15 @@ export default function TestsPage() {
     if (!test) return;
     if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-sfqa-extension-active')) {
       setSelectedTestForSteps(test);
+      const confRes = await fetch('/api/config');
+      const confData = await confRes.json().catch(() => ({ incognito: false, timeout: 30 }));
       window.postMessage({
         source: "sfqa-dashboard",
         action: "START_RECORDING",
         url: test.url,
         test: { ...test, steps: normalizeSteps(test.steps || localSteps, test.url) },
-        throughStepIndex
+        throughStepIndex,
+        config: confData
       }, "*");
       return;
     }
@@ -253,13 +261,41 @@ export default function TestsPage() {
 
   const startRun = async (test) => {
     if (!test) return;
+    runningTestRef.current = test;
     
     if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-sfqa-extension-active')) {
       setRunning(true);
+      extRunStatusRef.current = null;
+      extRunStartTimeRef.current = Date.now();
+      
+      try {
+        const runRes = await fetch('/api/runs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            testId: test.id,
+            testName: test.name,
+            zephyrId: test.zephyrId || '-',
+            zephyrCycle: '-',
+            status: 'running',
+            mode: 'extension',
+            duration: '0s',
+            triggeredBy: 'dashboard'
+          })
+        });
+        const newRun = await runRes.json();
+        extRunIdRef.current = newRun.id;
+      } catch (e) {
+        console.error('Failed to create initial run record', e);
+      }
+
+      const confRes = await fetch('/api/config');
+      const confData = await confRes.json().catch(() => ({ incognito: false, timeout: 30 }));
       window.postMessage({
         source: "sfqa-dashboard",
         action: "START_TEST_RUN",
-        test: { ...test, steps: normalizeSteps(test.steps || localSteps, test.url) }
+        test: { ...test, steps: normalizeSteps(test.steps || localSteps, test.url) },
+        config: confData
       }, "*");
       return;
     }
@@ -267,10 +303,33 @@ export default function TestsPage() {
     setRunning(true);
     abortControllerRef.current = new AbortController();
     try {
+      let currentRunId = null;
+      try {
+        const runRes = await fetch('/api/runs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            testId: test.id,
+            testName: test.name,
+            zephyrId: test.zephyrId || '-',
+            zephyrCycle: '-',
+            status: 'running',
+            mode: 'local',
+            duration: '0s',
+            triggeredBy: 'dashboard'
+          })
+        });
+        const newRun = await runRes.json();
+        currentRunId = newRun.id;
+        extRunIdRef.current = newRun.id;
+      } catch (e) {
+        console.error('Failed to create initial run record', e);
+      }
+
       const res = await fetch('/api/trigger-run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ testId: test.id, mode: 'local' }),
+        body: JSON.stringify({ testId: test.id, mode: 'local', runId: currentRunId }),
         signal: abortControllerRef.current.signal
       });
 
@@ -322,14 +381,22 @@ export default function TestsPage() {
     }
   };
 
-  const stopRun = () => {
+  const stopRun = async () => {
     if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-sfqa-extension-active')) {
       // Future extension stop support
       setRunning(false);
-      return;
-    }
-    if (abortControllerRef.current) {
+    } else if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+    }
+    
+    if (extRunIdRef.current) {
+      try {
+        await fetch(`/api/runs/${extRunIdRef.current}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'incomplete' })
+        });
+      } catch (e) {}
     }
   };
 
@@ -352,8 +419,21 @@ export default function TestsPage() {
         } else if (event.data.action === "RUN_LOG") {
           const payload = event.data.payload;
           if (payload && payload.type === 'done') {
-             // Sync tests state and clear running indicator
              try {
+               const status = extRunStatusRef.current || 'failed';
+               const durationMs = extRunStartTimeRef.current ? Date.now() - extRunStartTimeRef.current : 0;
+               const durationStr = `${Math.round(durationMs / 1000)}s`;
+               const test = runningTestRef.current;
+               if (test && extRunIdRef.current) {
+                 await fetch(`/api/runs/${extRunIdRef.current}`, {
+                   method: 'PUT',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({
+                     status,
+                     duration: durationStr
+                   })
+                 });
+               }
                const testsRes = await fetch('/api/tests');
                const updatedTests = await testsRes.json();
                setTests(Array.isArray(updatedTests) ? updatedTests : []);
@@ -362,6 +442,8 @@ export default function TestsPage() {
              setRunning(false);
           } else if (payload && payload.line) {
             console.log(payload.line);
+            if (payload.line.includes('[Extension] Run finished: PASSED')) extRunStatusRef.current = 'passed';
+            if (payload.line.includes('[Extension] Run finished: FAILED')) extRunStatusRef.current = 'failed';
           }
         }
       }
@@ -384,11 +466,39 @@ export default function TestsPage() {
     });
   }, []);
 
-  const filtered = tests
+  let filtered = tests
     .filter(t => activeSuite === 'All Tests' || t.suite === activeSuite)
     .filter(t => filter === 'all' || t.status === filter)
     .filter(t => t.name.toLowerCase().includes(search.toLowerCase()) ||
                  (t.zephyrId || '').toLowerCase().includes(search.toLowerCase()));
+
+  filtered.sort((a, b) => {
+    let aVal = a[sortConfig.key] || '';
+    let bVal = b[sortConfig.key] || '';
+    if (sortConfig.key === 'lastRun' || sortConfig.key === 'created') {
+      aVal = aVal ? new Date(aVal).getTime() : 0;
+      bVal = bVal ? new Date(bVal).getTime() : 0;
+    } else {
+      aVal = String(aVal).toLowerCase();
+      bVal = String(bVal).toLowerCase();
+    }
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const renderSortIcon = (key) => {
+    if (sortConfig.key !== key) return <span style={{ opacity: 0.3, marginLeft: 4, display: 'inline-block', width: 12 }}>↕</span>;
+    return <span style={{ marginLeft: 4, display: 'inline-block', width: 12 }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
 
   const counts = {
     passed: filtered.filter(t => t.status === 'passed').length,
@@ -564,6 +674,27 @@ export default function TestsPage() {
     }
   }
 
+  async function handleDeleteFolder(e, suiteId) {
+    e.stopPropagation();
+    if (!confirm('Delete this folder? Tests inside will be moved to All Tests.')) return;
+    try {
+      const res = await fetch(`/api/suites?id=${suiteId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Failed to delete folder');
+        return;
+      }
+      setSuites(prev => prev.filter(s => s.id !== suiteId));
+      setActiveSuite('All Tests');
+      // Re-fetch tests since some might have been moved
+      const testsRes = await fetch('/api/tests');
+      const testsData = await testsRes.json();
+      setTests(Array.isArray(testsData) ? testsData : []);
+    } catch (e) {
+      alert('Error deleting folder');
+    }
+  }
+
   const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
   if (loading) {
@@ -589,6 +720,7 @@ export default function TestsPage() {
               {folderNames.map(sName => {
                 const isActive = activeSuite === sName;
                 const isHovered = dragOverFolder === sName;
+                const suiteObj = suites.find(s => s.name === sName);
                 return (
                   <li
                     key={sName}
@@ -597,12 +729,22 @@ export default function TestsPage() {
                     onDragOver={(e) => { e.preventDefault(); setDragOverFolder(sName); }}
                     onDragLeave={() => setDragOverFolder(null)}
                     onDrop={(e) => handleDrop(e, sName)}
+                    style={{ position: 'relative', paddingRight: sName !== 'All Tests' ? 24 : undefined }}
                   >
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {sName === 'All Tests' ? '📂 ' : '📁 '}
                       {sName}
                     </span>
                     <span className="badge">{getSuiteTestCount(sName)}</span>
+                    {sName !== 'All Tests' && suiteObj && (
+                      <span 
+                        onClick={(e) => handleDeleteFolder(e, suiteObj.id)}
+                        style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.6, fontSize: 14 }}
+                        title="Delete Folder"
+                      >
+                        ✕
+                      </span>
+                    )}
                   </li>
                 );
               })}
@@ -641,7 +783,7 @@ export default function TestsPage() {
                 <input className="search-input" placeholder="Search by name or Zephyr ID…"
                   value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: '100%' }} />
                 <div className="filter-group">
-                  {[['all','All'],['passed','Passed'],['failed','Failed'],['running','Running']].map(([val, label]) => (
+                  {[['all','All'],['passed','Passed'],['failed','Failed'],['running','Running'],['incomplete','Incomplete']].map(([val, label]) => (
                     <button key={val} className={`filter-btn${filter === val ? ' active' : ''}`}
                       onClick={() => setFilter(val)}>
                       {label}
@@ -674,12 +816,12 @@ export default function TestsPage() {
                             checked={filtered.length > 0 && filtered.every(t => selectedIds.includes(t.id))}
                             onChange={handleSelectAll} />
                         </th>
-                        <th>Name</th>
-                        <th>Suite</th>
-                        <th>Zephyr ID</th>
-                        <th>Status</th>
-                        <th>Last Run</th>
-                        <th>Created</th>
+                        <th onClick={() => handleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>Name {renderSortIcon('name')}</th>
+                        <th onClick={() => handleSort('suite')} style={{ cursor: 'pointer', userSelect: 'none' }}>Suite {renderSortIcon('suite')}</th>
+                        <th onClick={() => handleSort('zephyrId')} style={{ cursor: 'pointer', userSelect: 'none' }}>Zephyr ID {renderSortIcon('zephyrId')}</th>
+                        <th onClick={() => handleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>Last Result {renderSortIcon('status')}</th>
+                        <th onClick={() => handleSort('lastRun')} style={{ cursor: 'pointer', userSelect: 'none' }}>Last Run {renderSortIcon('lastRun')}</th>
+                        <th onClick={() => handleSort('created')} style={{ cursor: 'pointer', userSelect: 'none' }}>Created {renderSortIcon('created')}</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -708,12 +850,18 @@ export default function TestsPage() {
                             <td><span className="pill pill-suite">{test.suite}</span></td>
                             <td>
                               {test.zephyrId && test.zephyrId !== '-'
-                                ? <span className="pill pill-zephyr">{test.zephyrId}</span>
+                                ? <a href={`https://bullioncapital.atlassian.net/projects/SFT?selectedItem=com.kanoah.test-manager__main-project-page#!/testCase/${test.zephyrId}`} target="_blank" rel="noreferrer" className="pill pill-zephyr" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>{test.zephyrId}</a>
                                 : <span style={{ color: 'var(--muted)', fontSize: 12 }}>-</span>}
                             </td>
                             <td>
-                              <span className={`status-dot ${test.status || 'idle'}`}/>
-                              {(test.status || 'idle').toUpperCase()}
+                              {(!test.status || test.status === 'idle') ? (
+                                <span style={{ color: 'var(--muted)', fontSize: 13, paddingLeft: 8 }}>-</span>
+                              ) : (
+                                <>
+                                  <span className={`status-dot ${test.status}`}/>
+                                  {test.status.toUpperCase()}
+                                </>
+                              )}
                             </td>
                             <td style={{ fontSize: 12.5, color: 'var(--muted)' }}>{fmtDate(test.lastRun)}</td>
                             <td style={{ fontSize: 12.5, color: 'var(--muted)' }}>{fmtDate(test.created)}</td>

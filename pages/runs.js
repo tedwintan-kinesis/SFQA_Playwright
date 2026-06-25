@@ -72,6 +72,7 @@ function ScreenshotsCell({ runId }) {
 export default function RunsPage() {
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState({ key: 'completedAt', direction: 'desc' });
 
   useEffect(() => {
     fetch('/api/runs')
@@ -89,6 +90,38 @@ export default function RunsPage() {
   const fmtDate = (iso) => iso
     ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
     : '—';
+
+  let sortedRuns = [...runs];
+  sortedRuns.sort((a, b) => {
+    let aVal = a[sortConfig.key] || '';
+    let bVal = b[sortConfig.key] || '';
+    if (sortConfig.key === 'completedAt') {
+      aVal = aVal ? new Date(aVal).getTime() : 0;
+      bVal = bVal ? new Date(bVal).getTime() : 0;
+    } else if (sortConfig.key === 'duration') {
+      aVal = parseFloat(aVal) || 0;
+      bVal = parseFloat(bVal) || 0;
+    } else {
+      aVal = String(aVal).toLowerCase();
+      bVal = String(bVal).toLowerCase();
+    }
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const renderSortIcon = (key) => {
+    if (sortConfig.key !== key) return <span style={{ opacity: 0.3, marginLeft: 4, display: 'inline-block', width: 12 }}>↕</span>;
+    return <span style={{ marginLeft: 4, display: 'inline-block', width: 12 }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
 
   if (loading) {
     return (
@@ -115,18 +148,18 @@ export default function RunsPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Run ID</th>
-                  <th>Test Case</th>
-                  <th>Zephyr Key</th>
-                  <th>Mode</th>
-                  <th>Status</th>
-                  <th>Duration</th>
-                  <th>Screenshots</th>
-                  <th>Completed</th>
+                  <th onClick={() => handleSort('id')} style={{ cursor: 'pointer', userSelect: 'none' }}>Run ID {renderSortIcon('id')}</th>
+                  <th onClick={() => handleSort('testName')} style={{ cursor: 'pointer', userSelect: 'none' }}>Test Case {renderSortIcon('testName')}</th>
+                  <th onClick={() => handleSort('zephyrId')} style={{ cursor: 'pointer', userSelect: 'none' }}>Zephyr Key {renderSortIcon('zephyrId')}</th>
+                  <th onClick={() => handleSort('zephyrExecutionId')} style={{ cursor: 'pointer', userSelect: 'none' }}>Zephyr Execution ID {renderSortIcon('zephyrExecutionId')}</th>
+                  <th onClick={() => handleSort('mode')} style={{ cursor: 'pointer', userSelect: 'none' }}>Mode {renderSortIcon('mode')}</th>
+                  <th onClick={() => handleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>Status {renderSortIcon('status')}</th>
+                  <th onClick={() => handleSort('duration')} style={{ cursor: 'pointer', userSelect: 'none' }}>Duration {renderSortIcon('duration')}</th>
+                  <th onClick={() => handleSort('completedAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>Completed {renderSortIcon('completedAt')}</th>
                 </tr>
               </thead>
               <tbody>
-                {runs.map(run => (
+                {sortedRuns.map(run => (
                   <tr key={run.id}>
                     <td style={{ fontFamily: 'monospace', fontSize: 12.5 }}>{run.id}</td>
                     <td style={{ fontWeight: 500, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -137,15 +170,17 @@ export default function RunsPage() {
                         ? <span className="pill pill-zephyr">{run.zephyrId}</span>
                         : <span style={{ color: 'var(--muted)' }}>-</span>}
                     </td>
+                    <td>
+                      {run.zephyrExecutionId
+                        ? <a href={`https://bullioncapital.atlassian.net/projects/SFT?selectedItem=com.atlassian.plugins.atlassian-connect-plugin:com.kanoah.test-manager__main-project-page#!/v2/testPlayer/testExecution/${run.zephyrExecutionId}`} target="_blank" rel="noreferrer" className="pill pill-zephyr" style={{ textDecoration: 'none' }}>{run.zephyrExecutionId}</a>
+                        : <span style={{ color: 'var(--muted)' }}>-</span>}
+                    </td>
                     <td><span className="pill">{run.mode || 'local'}</span></td>
                     <td>
                       <span className={`status-dot ${run.status}`}/>
                       {run.status?.toUpperCase()}
                     </td>
                     <td style={{ color: 'var(--muted)', fontSize: 12.5 }}>{run.duration || '—'}</td>
-                    <td>
-                      <ScreenshotsCell runId={run.id} />
-                    </td>
                     <td style={{ color: 'var(--muted)', fontSize: 12.5 }}>{fmtDate(run.completedAt)}</td>
                   </tr>
                 ))}

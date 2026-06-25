@@ -7,10 +7,9 @@
  * On Vercel it will return a 501 — use local execution only.
  */
 
-import { readTests, readRuns, writeRuns, writeTests } from '../../lib/dataStore';
+import { readTests, writeTests, updateRun } from '../../lib/dataStore';
 import { spawn } from 'child_process';
 import path from 'path';
-import { v4 as uuid } from 'uuid';
 import fs from 'fs';
 
 function findNewScreenshots(dir, startTime) {
@@ -54,7 +53,9 @@ export default async function handler(req, res) {
     });
   }
 
-  const { testId } = req.body;
+  const { testId, runId } = req.body;
+  if (!testId) return res.status(400).json({ error: 'Missing testId' });
+  if (!runId) return res.status(400).json({ error: 'Missing runId — run must be created first via POST /api/runs' });
 
   let tests;
   try {
@@ -66,7 +67,6 @@ export default async function handler(req, res) {
   const test = tests.find(t => t.id === testId);
   if (!test) return res.status(404).json({ error: 'Test not found' });
 
-  const runId = `run-${uuid().split('-')[0]}`;
   const startTime = Date.now();
 
   // Update test status to running
@@ -116,9 +116,12 @@ export default async function handler(req, res) {
     }
   });
 
-  child.on('close', async (code) => {
+  child.on('close', async (code, signal) => {
     const duration = `${Math.round((Date.now() - startTime) / 1000)}s`;
-    const status = code === 0 ? 'passed' : 'failed';
+    let status = code === 0 ? 'passed' : 'failed';
+    if (child.killed || signal === 'SIGTERM') {
+      status = 'incomplete';
+    }
 
     send(`[SFQA] Run finished: ${status.toUpperCase()} in ${duration}`, status === 'passed' ? 'success' : 'error');
 
@@ -134,7 +137,8 @@ export default async function handler(req, res) {
     let zephyrId = test.zephyrId || '-';
     let zephyrCycle = '-';
 
-    // Post to Zephyr if token is set and test is linked
+    let zephyrExecutionId = null;
+    // Run execution logic below uses the passed runId to Zephyr if token is set and test is linked
     if (process.env.ZEPHYR_TOKEN && test.zephyrId && test.zephyrId !== '-') {
       send(`[Zephyr] Reporting result to ${test.zephyrId}...`, 'info');
       try {
@@ -155,34 +159,65 @@ export default async function handler(req, res) {
             : '';
           const comment = `SFQA Dashboard automated run — ${new Date().toISOString()}${failureSummary}`;
 
+          const testScriptResults = (test.steps || []).map((step, idx) => {
+            return {
+              statusName: status === 'passed' ? 'Pass' : status === 'incomplete' ? 'In Progress' : 'Fail',
+              actualResult: `Step ${idx + 1} (${step.action}) ${status.toUpperCase()}.`
+            };
+          });
+
           const execRes = await axios.post('https://api.zephyrscale.smartbear.com/v2/testexecutions', {
             projectKey: 'SFT',
             testCaseKey: test.zephyrId,
             testCycleKey: latestCycle.key,
-            statusName: status === 'passed' ? 'Pass' : 'Fail',
+            statusName: status === 'passed' ? 'Pass' : status === 'incomplete' ? 'In Progress' : 'Fail',
             comment,
+            testScriptResults
           }, { headers: { Authorization: `Bearer ${process.env.ZEPHYR_TOKEN}`, 'Content-Type': 'application/json' } });
 
           send(`[Zephyr] Execution posted to cycle ${latestCycle.key} ✅`, 'success');
 
           // Upload screenshots if any
-          const execIdOrKey = execRes.data.key || execRes.data.id;
+          let execIdOrKey = execRes.data.key;
+          let pureId = execRes.data.id;
+          
+          if (!execIdOrKey && pureId) {
+            try {
+              const fetchRes = await axios.get(`https://api.zephyrscale.smartbear.com/v2/testexecutions/${pureId}`, {
+                headers: { Authorization: `Bearer ${process.env.ZEPHYR_TOKEN}` }
+              });
+              if (fetchRes.data?.key) execIdOrKey = fetchRes.data.key;
+            } catch (err) {}
+          }
+          
+          execIdOrKey = execIdOrKey || pureId;
+
           if (execIdOrKey) {
-            const screenshots = findNewScreenshots(path.join(rootDir, 'test-results'), startTime);
-            for (const screenshot of screenshots) {
-              try {
-                send(`[Zephyr] Uploading screenshot evidence: ${screenshot.name}...`, 'info');
-                const fileData = fs.readFileSync(screenshot.path);
-                const url = `https://api.zephyrscale.smartbear.com/v2/testexecutions/${execIdOrKey}/attachments/${encodeURIComponent(screenshot.name)}`;
-                await axios.put(url, fileData, {
-                  headers: {
-                    Authorization: `Bearer ${process.env.ZEPHYR_TOKEN}`,
-                    'Content-Type': 'application/octet-stream'
-                  }
-                });
-                send(`[Zephyr] Uploaded screenshot: ${screenshot.name} ✅`, 'success');
-              } catch (uploadErr) {
-                send(`[Zephyr] Warning: Failed to upload screenshot ${screenshot.name} — ${uploadErr.message}`, 'error');
+            zephyrExecutionId = String(execIdOrKey);
+            let screenshots = [
+              ...findNewScreenshots(path.join(rootDir, 'test-results'), startTime),
+              ...findNewScreenshots(path.join(rootDir, 'DOCS', 'SCREENSHOTS'), startTime),
+            ];
+            
+            if (screenshots.length > 0) {
+              const FormData = require('form-data');
+              for (const screenshot of screenshots) {
+                try {
+                  send(`[Zephyr] Uploading screenshot evidence: ${screenshot.name}...`, 'info');
+                  const form = new FormData();
+                  form.append('file', fs.createReadStream(screenshot.path));
+                  
+                  const url = `https://api.zephyrscale.smartbear.com/v2/testexecutions/${execIdOrKey}/attachments`;
+                  await axios.post(url, form, {
+                    headers: {
+                      Authorization: `Bearer ${process.env.ZEPHYR_TOKEN}`,
+                      ...form.getHeaders()
+                    }
+                  });
+                  send(`[Zephyr] Uploaded screenshot: ${screenshot.name} ✅`, 'success');
+                } catch (uploadErr) {
+                  send(`[Zephyr] Warning: Failed to upload screenshot ${screenshot.name} — ${uploadErr.message}`, 'error');
+                }
               }
             }
           }
@@ -192,21 +227,11 @@ export default async function handler(req, res) {
       }
     }
 
-    // Save run record
-    const runs = await readRuns();
-    runs.unshift({
-      id: runId,
-      testId: test.id,
-      testName: test.name,
-      zephyrId,
-      zephyrCycle,
-      status,
-      mode: 'local',
-      duration,
-      completedAt: new Date().toISOString(),
-      triggeredBy: 'dashboard',
-    });
-    await writeRuns(runs);
+    // Save run record via updateRun (skip Zephyr double push)
+    const runUpdates = { status, duration, zephyrCycle };
+    if (zephyrExecutionId) runUpdates.zephyrExecutionId = zephyrExecutionId;
+
+    await updateRun(runId, runUpdates, true);
 
     send(`__DONE__`, 'done');
     res.end();
