@@ -29,6 +29,13 @@ export default function TestsPage() {
   // Folder creation modal state
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [folderMenuOpenId, setFolderMenuOpenId] = useState(null);
+
+  useEffect(() => {
+    const handleClick = () => setFolderMenuOpenId(null);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
   const [savingFolder, setSavingFolder] = useState(false);
 
   // Steps Builder state
@@ -777,13 +784,30 @@ export default function TestsPage() {
                     </span>
                     <span className="badge">{getSuiteTestCount(sName)}</span>
                     {sName !== 'All Tests' && suiteObj && (
-                      <span 
-                        onClick={(e) => handleDeleteFolder(e, suiteObj.id)}
-                        style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.6, fontSize: 14 }}
-                        title="Delete Folder"
+                      <div 
+                        style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)' }}
+                        onClick={(e) => { e.stopPropagation(); setFolderMenuOpenId(folderMenuOpenId === suiteObj.id ? null : suiteObj.id); }}
                       >
-                        ✕
-                      </span>
+                        <span style={{ cursor: 'pointer', opacity: 0.8, fontSize: 18, fontWeight: 'bold' }}>⋮</span>
+                        {folderMenuOpenId === suiteObj.id && (
+                          <div style={{
+                            position: 'absolute', right: 0, top: '100%',
+                            background: 'var(--bg)', border: '1px solid var(--border)',
+                            borderRadius: 4, padding: '4px 0', zIndex: 10,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            minWidth: 120
+                          }}>
+                            <div 
+                              onClick={(e) => { e.stopPropagation(); setFolderMenuOpenId(null); handleDeleteFolder(e, suiteObj.id); }}
+                              style={{ padding: '8px 12px', cursor: 'pointer', color: '#e74c3c', fontSize: 13 }}
+                              onMouseEnter={e => e.target.style.background = 'var(--hover)'}
+                              onMouseLeave={e => e.target.style.background = 'transparent'}
+                            >
+                              Delete Folder
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </li>
                 );
