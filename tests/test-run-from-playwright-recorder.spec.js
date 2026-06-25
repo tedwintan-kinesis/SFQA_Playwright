@@ -67,16 +67,16 @@ async function showAutomationIndicator(page) {
 }
 
 async function findElementWithFallback(page, selectors) {
-  // Try each selector with a short wait
+  // Instantly pick first visible selector — Playwright auto-wait on action handles the rest
   for (const sel of selectors) {
     if (!sel) continue;
     try {
-      const locator = page.locator(sel).first();
-      await locator.waitFor({ state: 'visible', timeout: 3000 });
-      return locator;
+      if (await page.locator(sel).first().isVisible()) {
+        return page.locator(sel).first();
+      }
     } catch (e) {}
   }
-  // Last resort: use first stable (non-dynamic) selector
+  // Last resort: stable selector
   const stable = selectors.find(s => s && !s.startsWith('#_r_'));
   return page.locator(stable || selectors[0] || 'body');
 }
@@ -104,7 +104,7 @@ test('test run from playwright recorder', async ({ page }) => {
   await el3.fill(`Ttd@11190`);
 
   // Step 4: Click (manual)
-  const el4 = await findElementWithFallback(page, ["[data-testid=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
+  const el4 = await findElementWithFallback(page, ["[data-cy=\"continue-with-email\"]","[data-qa=\"continue-with-email\"]","[data-cy=\"continue-with-email\"]"]);
   await el4.click();
 
   // Step 5: Javascript (manual)

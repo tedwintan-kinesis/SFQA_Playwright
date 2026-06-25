@@ -153,7 +153,7 @@ module.exports = defineConfig({
       devtools: true,
     },
   },
-  projects: [{ name: 'chromium', use: { channel: 'chromium' } }],
+  projects: [{ name: 'chromium', use: { channel: 'chrome' } }],
 });
 `, 'utf-8');
 

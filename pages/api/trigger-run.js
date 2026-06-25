@@ -96,7 +96,7 @@ export default async function handler(req, res) {
 
   const child = spawn(
     process.execPath,
-    [playwrightCli, 'test', specFile, '--headed', '--reporter=line'],
+    [playwrightCli, 'test', specFile, '--headed', '--reporter=line', '--project=chromium'],
     { cwd: rootDir }
   );
 

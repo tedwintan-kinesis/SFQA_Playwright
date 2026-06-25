@@ -33,6 +33,7 @@ export default function TestsPage() {
   const [savingSteps, setSavingSteps] = useState(false);
   const [recording, setRecording] = useState(false);
   const [running, setRunning] = useState(false);
+  const [expandedFallbacks, setExpandedFallbacks] = useState({});
 
   const normalizeSteps = (steps, url) => {
     const existing = Array.isArray(steps) ? steps : [];
@@ -115,6 +116,15 @@ export default function TestsPage() {
       const temp = copy[idx];
       copy[idx] = copy[idx + 1];
       copy[idx + 1] = temp;
+      return copy;
+    });
+  };
+
+  const duplicateStep = (idx) => {
+    setLocalSteps(prev => {
+      const copy = [...prev];
+      const clone = { ...copy[idx], id: `step-${Date.now()}` };
+      copy.splice(idx + 1, 0, clone);
       return copy;
     });
   };
@@ -606,6 +616,11 @@ export default function TestsPage() {
 
         {/* Content */}
         <div className="split-content" style={{ display: 'flex', flexDirection: 'column' }}>
+          <datalist id="global-vars-list">
+            {globalVars.map(v => (
+              <option key={v.id} value={`{{${v.key}}}`}>{v.fallbacks?.[0] || 'no fallback'}</option>
+            ))}
+          </datalist>
           <div className="control-bar" style={{ flexShrink: 0 }}>
             <h2>{activeSuite}</h2>
             <div className="control-right">
@@ -771,6 +786,8 @@ export default function TestsPage() {
                             <button type="button" className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: 11 }}
                               onClick={() => moveStepDown(idx)} disabled={idx === 0 || idx === localSteps.length - 1}>Down</button>
                             <button type="button" className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: 11 }}
+                              onClick={() => duplicateStep(idx)} disabled={idx === 0}>Duplicate</button>
+                            <button type="button" className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: 11 }}
                               onClick={() => startRecord(selectedTestForSteps, idx)} disabled={recording || running}>Record from here</button>
                             <button type="button" className="btn btn-danger" style={{ padding: '5px 10px', fontSize: 11 }}
                               onClick={() => deleteStep(idx)} disabled={idx === 0}>Delete</button>
@@ -781,7 +798,7 @@ export default function TestsPage() {
                           <label style={{ fontSize: 10.5 }}>Action</label>
                           <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.action} onChange={e => updateStep(idx, 'action', e.target.value)} disabled={idx === 0}>
                             <option>Click</option>
-                            <option>Type</option>
+                            <option value="Type">Input</option>
                             <option>Assert Visible</option>
                             <option>Assert Text</option>
                             <option>Wait</option>
@@ -791,49 +808,46 @@ export default function TestsPage() {
                         </div>
 
                         {idx > 0 && step.action !== 'Navigate' && step.action !== 'Wait' && step.action !== 'Javascript' && (
-                          <>
-                            <div className="form-group">
-                              <label style={{ fontSize: 10.5 }}>Selector Type</label>
-                              <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.selectorType || 'global'} onChange={e => updateStep(idx, 'selectorType', e.target.value)}>
-                                <option value="global">Select from Global Variable</option>
-                                <option value="manual">Manual Input</option>
-                              </select>
+                          <div className="form-group">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                              <label style={{ fontSize: 10.5, margin: 0 }}>Element Selectors</label>
+                              <span
+                                onClick={() => setExpandedFallbacks(prev => ({ ...prev, [step.id]: !prev[step.id] }))}
+                                style={{ fontSize: 10, color: 'var(--primary)', cursor: 'pointer', userSelect: 'none' }}>
+                                {expandedFallbacks[step.id] ? '▲ Hide Fallbacks' : '▼ Show Fallbacks'}
+                              </span>
                             </div>
-
-                            {(step.selectorType || 'global') === 'global' ? (
-                              <div className="form-group">
-                                <label style={{ fontSize: 10.5 }}>Global Variable</label>
-                                <select style={{ fontSize: 12.5, padding: '5px 8px' }} value={step.variableId} onChange={e => updateStep(idx, 'variableId', e.target.value)}>
-                                  {globalVars.map(v => (
-                                    <option key={v.id} value={v.id}>{v.key} ({v.fallbacks?.[0] || 'no fallback'})</option>
-                                  ))}
-                                </select>
-                              </div>
-                            ) : (
-                              <div className="form-group">
-                                <label style={{ fontSize: 10.5 }}>Fallback Element Selectors</label>
-                                {(step.fallbacks || ['', '', '']).map((fb, fIdx) => (
-                                  <div key={fIdx} className="fallback-row" style={{ marginBottom: 4 }}>
-                                    <span className="fallback-num" style={{ fontSize: 10 }}>P{fIdx + 1}</span>
+                            <div className="fallback-row" style={{ marginBottom: 4 }}>
+                              <span className="fallback-num" style={{ fontSize: 10 }}>P1</span>
+                              <input className="fallback-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                value={step.fallbacks?.[0] || ''}
+                                onChange={e => updateStepFallback(idx, 0, e.target.value)}
+                                placeholder='e.g. #submit-btn or getByText("Login")'
+                              />
+                            </div>
+                            {expandedFallbacks[step.id] && (
+                              <>
+                                {(step.fallbacks || []).slice(1).map((fb, fIdx) => (
+                                  <div key={fIdx + 1} className="fallback-row" style={{ marginBottom: 4 }}>
+                                    <span className="fallback-num" style={{ fontSize: 10 }}>P{fIdx + 2}</span>
                                     <input className="fallback-input" style={{ fontSize: 12, padding: '4px 8px' }}
-                                      value={fb} onChange={e => updateStepFallback(idx, fIdx, e.target.value)}
+                                      value={fb} onChange={e => updateStepFallback(idx, fIdx + 1, e.target.value)}
                                       placeholder={
-                                        fIdx === 0 ? 'e.g. getByText("aaabbb")'
-                                      : fIdx === 1 ? 'e.g. #submit-btn'
-                                      : fIdx === 2 ? 'e.g. .btn-primary'
-                                      : `Additional selector ${fIdx + 1} (optional)`
+                                        fIdx === 0 ? 'e.g. #submit-btn'
+                                      : fIdx === 1 ? 'e.g. .btn-primary'
+                                      : `Additional selector ${fIdx + 2} (optional)`
                                       }
                                     />
                                   </div>
                                 ))}
-                                <button type="button" className="btn btn-secondary" 
+                                <button type="button" className="btn btn-secondary"
                                   style={{ marginTop: 2, padding: '3px 8px', fontSize: 10.5, alignSelf: 'flex-start' }}
                                   onClick={() => addStepFallbackField(idx)}>
                                   + Add Fallback Selector
                                 </button>
-                              </div>
+                              </>
                             )}
-                          </>
+                          </div>
                         )}
 
                         {(idx === 0 || step.action === 'Type' || step.action === 'Assert Text' || step.action === 'Wait' || step.action === 'Javascript') && (

@@ -28,5 +28,13 @@
       "input[type='email']",
       "input[placeholder*='email']"
     ]
+  },
+  {
+    "id": "var-464f8c84",
+    "key": "test_element",
+    "desc": "",
+    "fallbacks": [
+      "text=login"
+    ]
   }
 ]

@@ -50,7 +50,10 @@ export default function Readme() {
                 Click <strong>Load unpacked</strong> and select the extracted extension folder.
               </li>
               <li style={{ marginBottom: '8px' }}>
-                <strong>CRITICAL:</strong> Click "Details" on the installed extension and toggle ON <strong>Allow in Incognito</strong>. The recorder will not work without this.
+              Click on "Details" on the installed extension and toggle ON <strong>Allow in Incognito</strong>. The recorder will not work without this.
+              </li>
+              <li style={{ marginBottom: '8px' }}>
+                <strong>IMPORTANT:</strong> Ensure you have <strong>Google Chrome</strong> installed on your machine. All recording and test runs will automatically launch and execute using Google Chrome.
               </li>
               <li>
                 Refresh your dashboard page. You can now start recording or run any test case to start capturing.
