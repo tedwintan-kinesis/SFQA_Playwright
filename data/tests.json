@@ -28,8 +28,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-run-1.spec.js",
     "type": "Web (Desktop)",
-    "status": "passed",
-    "lastRun": "2026-06-25T15:19:06.409Z",
+    "status": "incomplete",
+    "lastRun": "2026-06-26T08:46:48.569Z",
     "created": "2026-06-23T09:28:27.037Z",
     "steps": [
       {
