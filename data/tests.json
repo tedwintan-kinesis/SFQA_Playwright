@@ -28,8 +28,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-run-1.spec.js",
     "type": "Web (Desktop)",
-    "status": "incomplete",
-    "lastRun": "2026-06-26T01:56:31.492Z",
+    "status": "passed",
+    "lastRun": "2026-06-25T15:19:06.409Z",
     "created": "2026-06-23T09:28:27.037Z",
     "steps": [
       {
@@ -281,8 +281,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-kms-login-copy.spec.js",
     "type": "Web (Desktop)",
-    "status": "failed",
-    "lastRun": "2026-06-25T14:58:09.565Z",
+    "status": "incomplete",
+    "lastRun": "2026-06-26T01:56:33.827Z",
     "created": "2026-06-25T14:57:01.787Z",
     "steps": [
       {
