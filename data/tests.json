@@ -282,7 +282,7 @@
     "specFile": "tests/test-kms-login-copy.spec.js",
     "type": "Web (Desktop)",
     "status": "incomplete",
-    "lastRun": "2026-06-26T08:47:30.520Z",
+    "lastRun": "2026-06-26T08:47:32.267Z",
     "created": "2026-06-25T14:57:01.787Z",
     "steps": [
       {
