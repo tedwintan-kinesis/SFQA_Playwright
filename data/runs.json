@@ -19,11 +19,11 @@
     "testName": "Test Run 1",
     "zephyrId": "SFT-T501",
     "zephyrCycle": "-",
-    "status": "running",
+    "status": "incomplete",
     "mode": "extension",
-    "duration": "0s",
+    "duration": "TIMEOUT",
     "triggeredBy": "dashboard",
-    "completedAt": "2026-06-25T15:18:37.579Z",
+    "completedAt": "2026-06-26T01:56:31.492Z",
     "zephyrSynced": false
   },
   {
