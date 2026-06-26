@@ -19,11 +19,11 @@
     "testName": "Test Run 1",
     "zephyrId": "SFT-T501",
     "zephyrCycle": "-",
-    "status": "running",
+    "status": "incomplete",
     "mode": "extension",
-    "duration": "0s",
+    "duration": "TIMEOUT",
     "triggeredBy": "dashboard",
-    "completedAt": "2026-06-25T15:18:37.579Z",
+    "completedAt": "2026-06-26T08:46:48.569Z",
     "zephyrSynced": false
   },
   {
@@ -32,11 +32,11 @@
     "testName": "Test KMS Login (Copy)",
     "zephyrId": "SFT-T513",
     "zephyrCycle": "-",
-    "status": "running",
+    "status": "incomplete",
     "mode": "extension",
-    "duration": "0s",
+    "duration": "TIMEOUT",
     "triggeredBy": "dashboard",
-    "completedAt": "2026-06-25T15:18:08.265Z",
+    "completedAt": "2026-06-26T08:47:30.520Z",
     "zephyrSynced": false
   },
   {
@@ -73,11 +73,11 @@
     "testName": "Test KMS Login (Copy)",
     "zephyrId": "SFT-T513",
     "zephyrCycle": "-",
-    "status": "incomplete",
+    "status": "running",
     "mode": "extension",
-    "duration": "TIMEOUT",
+    "duration": "0s",
     "triggeredBy": "dashboard",
-    "completedAt": "2026-06-26T08:46:51.772Z",
+    "completedAt": "2026-06-25T15:07:17.667Z",
     "zephyrSynced": false
   },
   {
