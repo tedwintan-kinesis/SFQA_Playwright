@@ -1,0 +1,32 @@
+PROPOSAL: SCALING ARCHITECTURE & SALESFORCE SECURITY ASSESSMENT
+PROJECT: SFQA Playwright Automation Dashboard
+
+1. CURRENT PLATFORMS
+- GitHub: Code repository and JSON data storage.
+- Vercel: Hosting Next.js Dashboard UI and API.
+- Zephyr Scale & Jira: Test case management and execution tracking.
+- Playwright: Browser automation framework.
+
+2. FUTURE PLATFORMS FOR LONG-TERM SCALING
+To support high concurrency, faster execution, and heavy artifact storage, these platforms are recommended:
+- Dedicated Database (e.g., MongoDB Atlas, AWS RDS PostgreSQL): Replaces current GitHub JSON file storage. Required to prevent API rate limits and support concurrent test data writes.
+- Cloud CI/CD Execution (e.g., GitHub Actions, AWS ECS, Azure DevOps): Replaces local machine/extension execution. Runs headless Playwright tests in scalable Docker containers.
+- Object Storage (e.g., AWS S3, Google Cloud Storage): Required to store heavy test evidence like screenshots, video recordings, and Playwright trace logs.
+
+3. SALESFORCE DATA SECURITY & ACCESS (CORE FOCUS)
+Impact of the automation tool on Salesforce security:
+
+A. Access Method
+- UI-Level Execution: Playwright interacts with Salesforce purely through the front-end browser DOM, identical to human behavior. It does not use direct API data injections or bypass standard login protocols.
+- Native Security Enforcement: The automation is bound by standard Salesforce security. Validation rules, Profiles, Permission Sets, and Sharing Rules apply normally.
+
+B. Affected Data
+- Sandbox Isolation: Scripts will exclusively target Salesforce Sandboxes (QA/UAT). Live customer Production data is never touched or exposed.
+- Controlled Data Scope: The automation only affects data explicitly defined in the scripts (e.g., creating dummy leads or test records). It does not perform bulk data extractions or mass deletions.
+
+C. Credential Management
+- Zero Hardcoding: Salesforce passwords and tokens are never stored in code. They are managed via encrypted Environment Variables (Vercel Secrets / CI/CD Secrets).
+- Dedicated Service Accounts: Automation operates using dedicated "Test User" accounts granted the principle of least privilege, ensuring accountability and preventing misuse of human employee accounts.
+
+CONCLUSION
+The automation architecture poses no underlying risk to Salesforce security. It operates strictly within the boundaries of a simulated human user. Scaling will require migrating from JSON files to a standard database and cloud execution, which will maintain the same strict security protocols.

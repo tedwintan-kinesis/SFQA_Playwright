@@ -1,65 +1,11 @@
-TODOLIST: SFQA Playwright Test Automation Dashboard & Flow
-===========================================================
 
-1. Create a simple UI with:
-- test cases where it can be linked to zephyr test case (this is important)
-- test folder
-- test runs
-- test report
-- scheduler
-- masterlist of elements / variables with multiple fallbacks (this is important)
-
-2. Find the best free hosting site for this UI
-
-3. Find the easiest way to setup for first time QA users (ensure that its is as easy as possible for a low code QA team)
-
-4. Test a simple flow from KMS Sign up to Salesforce (2FA particularly, assert field is visible, assert if text is visible)
-
-
-===========================================================
-SUGGESTIONS & DETAILS
-===========================================================
-
-1. Simple UI Dashboard Suggestions:
-- UI Framework: Use HTML/JS or simple React setup via Vite.
-- Masterlist of Elements: Implement a JSON schema mapping keys to array of locator strings. Example:
-  { "login_button": ["[data-testid='login']", "button[type='submit']", "text=Login"] }
-- Zephyr Link: Display test cycle key or test case ID mappings in the configuration screen.
-
-2. Free Hosting Suggestions:
-- Vercel: Best for static HTML or Next.js SPAs.
-- Netlify: Excellent for single page applications.
-
-3. Low-Code Setup Suggestions:
-- Create automated `setup.bat` or script that installs node, runs npm install, and installs playwright browsers.
-- Create simple GUI-based configurator inside the dashboard page to save environment settings directly to `.env`.
-
-4. Test Flow 2FA Suggestions:
-- Script automatic retrieval of 2FA validation codes via mail API (like Scandium mailbox or custom API).
-- Assertions: `expect(locator).toBeVisible()` for OTP input field, and visual feedback messages.
-
-***TO CONTINUE***
-- IMPLEMENT DEDICATED LOGIN PAGE AFTER BASE FEATURES ARE SETTLED
-
--implement this method similar to how Smartbear Reflect works
-SmartBear Reflect and Zephyr Scale integration flow:
-
-Mapping
-
-Link Reflect test case to Zephyr Scale Test Case Key (e.g. SFT-T74) in Reflect test settings.
-Execution
-
-Test run triggered (via CI/CD, scheduler, or Reflect UI).
-Reflect executes no-code tests in its cloud browsers.
-Reporting
-
-Upon completion, Reflect calls Zephyr API: POST https://api.zephyrscale.smartbear.com/v2/testexecutions
-Reports status (Pass/Fail), run duration, and logs.
-Evidence
-
-Reflect uploads test video links, screenshots, and logs directly as attachments to corresponding Zephyr execution records in Jira.
 
 [Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "https://gpt4.mirbuds.com/claudecode", "User")
 [Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "sk-ant-oat01-3iPljS9lCayyM69wUN6p383YkjjXwYhV", "User")
 
 1. Peiridically make backups for Zephyr Test cases and Test resulst either to Github or local folder (Zephyr_Backup)
+2. Enssure Test Result and each test step result is properly pushed to Zephyr Scale 
+ - Change actual result from Step 1 (Navigate) PASSED. >>> Step 1 (Navigate): PASSED.
+- Fix missing screenshot not pushed (check should each test step run be a screenshot? will it consume alot of resource)
+3. Remove all status in Test Case (e.g. number of passed, failed, running, incomplete) > MOVE TO TEST RUNS
+4. IMPROVE TEST REPORT (it should serve different purpose rather than duplciate Test Runs)

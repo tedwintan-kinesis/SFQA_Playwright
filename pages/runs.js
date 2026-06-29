@@ -131,6 +131,11 @@ export default function RunsPage() {
     );
   }
 
+  const total   = runs.length;
+  const passed  = runs.filter(r => r.status === 'passed').length;
+  const failed  = runs.filter(r => r.status === 'failed').length;
+  const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
   return (
     <>
       <Head><title>Runs — Salesforce Reflect</title></Head>
@@ -138,6 +143,28 @@ export default function RunsPage() {
       <div className="split-view">
         <div className="split-content">
           <h2>Test Runs</h2>
+
+          {/* Summary cards */}
+          <div className="cards-row" style={{ marginBottom: '20px' }}>
+            <div className="stat-card">
+              <div className="card-label">Total Runs</div>
+              <div className="card-value">{total}</div>
+            </div>
+            <div className="stat-card green">
+              <div className="card-label">Passed</div>
+              <div className="card-value">{passed}</div>
+            </div>
+            <div className="stat-card red">
+              <div className="card-label">Failed</div>
+              <div className="card-value">{failed}</div>
+            </div>
+            <div className="stat-card">
+              <div className="card-label">Pass Rate</div>
+              <div className="card-value" style={{ color: passRate >= 80 ? 'var(--success)' : 'var(--error)' }}>
+                {passRate}%
+              </div>
+            </div>
+          </div>
 
           {runs.length === 0 ? (
             <div className="empty-state" style={{ padding: '30px 0' }}>
