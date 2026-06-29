@@ -9,3 +9,6 @@ out/
 
 # Secrets — never commit
 .env
+
+# Data files — written only by Vercel via GitHub API, never from local machine
+data/*.json
