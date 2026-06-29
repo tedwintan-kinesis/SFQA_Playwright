@@ -159,7 +159,11 @@
     "specFile": "tests/test-kms-login.spec.js",
     "type": "Web (Desktop)",
     "status": "incomplete",
+<<<<<<< HEAD
     "lastRun": "2026-06-25T15:33:39.544Z",
+=======
+    "lastRun": "2026-06-26T01:56:36.857Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
     "created": "2026-06-25T06:46:17.234Z",
     "steps": [
       {
@@ -282,7 +286,11 @@
     "specFile": "tests/test-kms-login-copy.spec.js",
     "type": "Web (Desktop)",
     "status": "incomplete",
+<<<<<<< HEAD
     "lastRun": "2026-06-26T01:56:28.059Z",
+=======
+    "lastRun": "2026-06-26T08:47:35.597Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
     "created": "2026-06-25T14:57:01.787Z",
     "steps": [
       {

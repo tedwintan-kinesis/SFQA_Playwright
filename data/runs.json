@@ -23,7 +23,11 @@
     "mode": "extension",
     "duration": "TIMEOUT",
     "triggeredBy": "dashboard",
+<<<<<<< HEAD
     "completedAt": "2026-06-26T01:56:26.914Z",
+=======
+    "completedAt": "2026-06-26T08:46:48.569Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
     "zephyrSynced": false
   },
   {
@@ -77,7 +81,11 @@
     "mode": "extension",
     "duration": "TIMEOUT",
     "triggeredBy": "dashboard",
+<<<<<<< HEAD
     "completedAt": "2026-06-26T01:56:28.059Z",
+=======
+    "completedAt": "2026-06-26T08:47:35.597Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
     "zephyrSynced": false
   },
   {
@@ -90,7 +98,11 @@
     "mode": "extension",
     "duration": "TIMEOUT",
     "triggeredBy": "dashboard",
+<<<<<<< HEAD
     "completedAt": "2026-06-25T15:33:39.544Z",
+=======
+    "completedAt": "2026-06-26T01:56:36.857Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
     "zephyrSynced": false
   },
   {
