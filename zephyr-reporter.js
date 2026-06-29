@@ -8,7 +8,7 @@
 
 require('dotenv').config();
 const axios = require('axios');
-
+const FormData = require('form-data');
 // ── Config ──────────────────────────────────────────────────────────────────
 const ZEPHYR_TOKEN = process.env.ZEPHYR_TOKEN;
 const BASE_URL = 'https://api.zephyrscale.smartbear.com/v2';
@@ -107,11 +107,13 @@ async function main() {
       for (const screenshot of screenshots) {
         try {
           console.log(`Uploading screenshot ${screenshot.name} to Zephyr execution ${execIdOrKey}...`);
-          const fileData = fs.readFileSync(screenshot.path);
-          await axios.put(`${BASE_URL}/testexecutions/${execIdOrKey}/attachments/${encodeURIComponent(screenshot.name)}`, fileData, {
+          const form = new FormData();
+          form.append('file', fs.createReadStream(screenshot.path));
+
+          await axios.post(`${BASE_URL}/testexecutions/${execIdOrKey}/attachments`, form, {
             headers: {
               Authorization: `Bearer ${ZEPHYR_TOKEN}`,
-              'Content-Type': 'application/octet-stream'
+              ...form.getHeaders()
             }
           });
           console.log(`✅ Uploaded screenshot: ${screenshot.name}`);
