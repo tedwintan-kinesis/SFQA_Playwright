@@ -80,12 +80,12 @@ export default function TestsPage() {
   useEffect(() => {
     fetch('/api/variables')
       .then(res => res.json())
-      .then(data => setGlobalVars(data || []))
+      .then(data => setGlobalVars(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
 
     fetch('/api/test-variables')
       .then(res => res.json())
-      .then(data => setTestVariables(data || []))
+      .then(data => setTestVariables(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
   }, []);
 
