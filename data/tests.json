@@ -281,8 +281,8 @@
     "suite": "All Tests",
     "specFile": "tests/test-kms-login-copy.spec.js",
     "type": "Web (Desktop)",
-    "status": "incomplete",
-    "lastRun": "2026-06-26T08:47:35.597Z",
+    "status": "passed",
+    "lastRun": "2026-06-29T14:49:17.384Z",
     "created": "2026-06-25T14:57:01.787Z",
     "steps": [
       {
