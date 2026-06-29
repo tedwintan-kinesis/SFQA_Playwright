@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       }];
 
       // Generate Playwright spec content
-      const content = generateSpecContent(name, url, zephyrId, steps);
+      const content = await generateSpecContent(name, url, zephyrId, steps);
 
       // Commit spec file to disk/GitHub
       await commitFile(finalSpecFile, content);

@@ -42,10 +42,10 @@ export default async function handler(req, res) {
       let content = await readFileContent(test.specFile);
       if (content) {
         // Update headers/test name in existing content
-        content = updateSpecContent(content, updatedData.name, updatedData.url, updatedData.zephyrId, updatedData.steps);
+        content = await updateSpecContent(content, updatedData.name, updatedData.url, updatedData.zephyrId, updatedData.steps);
       } else {
         // Generate new spec content if file missing
-        content = generateSpecContent(updatedData.name, updatedData.url, updatedData.zephyrId, updatedData.steps);
+        content = await generateSpecContent(updatedData.name, updatedData.url, updatedData.zephyrId, updatedData.steps);
       }
 
       // Sync filesystem
