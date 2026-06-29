@@ -5,11 +5,11 @@
     "testName": "Test KMS Login (Copy)",
     "zephyrId": "SFT-T513",
     "zephyrCycle": "-",
-    "status": "running",
+    "status": "passed",
     "mode": "extension",
-    "duration": "0s",
+    "duration": "26s",
     "triggeredBy": "dashboard",
-    "completedAt": "2026-06-29T14:48:50.846Z",
+    "completedAt": "2026-06-29T14:49:17.384Z",
     "zephyrSynced": false
   }
 ]
