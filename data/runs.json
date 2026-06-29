@@ -1,0 +1,122 @@
+[
+  {
+    "id": "run-3da82abb",
+    "testId": "SFT-T501",
+    "testName": "Test Run 1",
+    "zephyrId": "SFT-T501",
+    "zephyrCycle": "SFT-R14",
+    "status": "passed",
+    "mode": "extension",
+    "duration": "4s",
+    "triggeredBy": "dashboard",
+    "completedAt": "2026-06-25T15:19:06.409Z",
+    "zephyrSynced": true,
+    "zephyrExecutionId": "2911143084"
+  },
+  {
+    "id": "run-78ab8550",
+    "testId": "SFT-T501",
+    "testName": "Test Run 1",
+    "zephyrId": "SFT-T501",
+    "zephyrCycle": "-",
+    "status": "incomplete",
+    "mode": "extension",
+    "duration": "TIMEOUT",
+    "triggeredBy": "dashboard",
+<<<<<<< HEAD
+    "completedAt": "2026-06-26T01:56:26.914Z",
+=======
+    "completedAt": "2026-06-26T08:46:48.569Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
+    "zephyrSynced": false
+  },
+  {
+    "id": "run-66233d19",
+    "testId": "SFT-T513",
+    "testName": "Test KMS Login (Copy)",
+    "zephyrId": "SFT-T513",
+    "zephyrCycle": "-",
+    "status": "incomplete",
+    "mode": "extension",
+    "duration": "TIMEOUT",
+    "triggeredBy": "dashboard",
+    "completedAt": "2026-06-26T01:56:27.502Z",
+    "zephyrSynced": false
+  },
+  {
+    "id": "run-7abe08d3",
+    "testId": "SFT-T511",
+    "testName": "Test KMS Login",
+    "zephyrId": "SFT-T511",
+    "zephyrCycle": "SFT-R14",
+    "status": "passed",
+    "mode": "extension",
+    "duration": "16s",
+    "triggeredBy": "dashboard",
+    "completedAt": "2026-06-25T15:10:55.692Z",
+    "zephyrSynced": true,
+    "zephyrExecutionId": "2911136278"
+  },
+  {
+    "id": "run-6147218d",
+    "testId": "SFT-T511",
+    "testName": "Test KMS Login",
+    "zephyrId": "SFT-T511",
+    "zephyrCycle": "SFT-R14",
+    "status": "passed",
+    "mode": "extension",
+    "duration": "17s",
+    "triggeredBy": "dashboard",
+    "completedAt": "2026-06-25T15:08:24.548Z",
+    "zephyrSynced": true,
+    "zephyrExecutionId": "2911136293"
+  },
+  {
+    "id": "run-c15ab1d9",
+    "testId": "SFT-T513",
+    "testName": "Test KMS Login (Copy)",
+    "zephyrId": "SFT-T513",
+    "zephyrCycle": "-",
+    "status": "incomplete",
+    "mode": "extension",
+    "duration": "TIMEOUT",
+    "triggeredBy": "dashboard",
+<<<<<<< HEAD
+    "completedAt": "2026-06-26T01:56:28.059Z",
+=======
+    "completedAt": "2026-06-26T08:47:35.597Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
+    "zephyrSynced": false
+  },
+  {
+    "id": "run-7bd12cf1",
+    "testId": "SFT-T511",
+    "testName": "Test KMS Login",
+    "zephyrId": "SFT-T511",
+    "zephyrCycle": "-",
+    "status": "incomplete",
+    "mode": "extension",
+    "duration": "TIMEOUT",
+    "triggeredBy": "dashboard",
+<<<<<<< HEAD
+    "completedAt": "2026-06-25T15:33:39.544Z",
+=======
+    "completedAt": "2026-06-26T01:56:36.857Z",
+>>>>>>> 43e36bcf2f6dbcb66bd514ceab11ac278c96d291
+    "zephyrSynced": false
+  },
+  {
+    "id": "run-ce83ba10",
+    "testId": "SFT-T500",
+    "testName": "Test Run 7",
+    "zephyrId": "SFT-T500",
+    "zephyrCycle": "SFT-R14",
+    "status": "passed",
+    "mode": "extension",
+    "duration": "5s",
+    "triggeredBy": "dashboard",
+    "completedAt": "2026-06-25T14:58:47.058Z",
+    "zephyrExecutionId": "2911132406",
+    "zephyrSynced": true
+  }
+]
